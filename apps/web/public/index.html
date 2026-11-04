@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta name="theme-color" content="#F3F6F5" media="(prefers-color-scheme: light)"><meta name="theme-color" content="#0A110F" media="(prefers-color-scheme: dark)">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Product Radar: find products that sell</title>
+<meta name="description" content="Check any product in 30 seconds: live demand, marketplace prices, supplier cost, season and profit. For new sellers, dropshippers and online shops.">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700&family=Inter:wght@400;500;600;700&family=Hind+Siliguri:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="/config.js"></script>
+<script src="/static/boot.js?v=__APP_VERSION__"></script>
+<link rel="stylesheet" href="/static/style.css?v=__APP_VERSION__">
+<link rel="icon" href="/static/brand/favicon.ico" sizes="any">
+<link rel="icon" type="image/png" sizes="32x32" href="/static/brand/icon-32.png">
+<link rel="apple-touch-icon" href="/static/brand/apple-touch-icon.png">
+<link rel="manifest" href="/static/brand/manifest.webmanifest">
+</head>
+<body>
+<div id="pre" class="pre" role="status" aria-label="Loading Product Radar">
+  <div class="pre-box">
+    <div class="pre-radar"><span class="pr-ring r1"></span><span class="pr-ring r2"></span><span class="pr-ring r3"></span><span class="pr-sweep"></span>
+      <span class="pr-dot d1"></span><span class="pr-dot d2"></span><span class="pr-dot d3"></span><img src="/static/brand/icon-96.png" alt="" width="54" height="54"></div>
+    <div class="pre-name">Product <em>Radar</em></div>
+    <div class="pre-msg" id="premsg">Scanning products…</div>
+    <div class="pre-bar"><i></i></div>
+  </div>
+</div>
+<header class="bar"><div class="wrap">
+  <a class="logo" href="#/" aria-label="Product Radar home"><i><img src="/static/brand/icon-96.png" alt="" width="34" height="34"></i><span>Product <em>Radar</em></span></a>
+  <nav class="nav" id="nav"></nav>
+  <div class="tools">
+    <select class="sel hide-m" id="cur" aria-label="Currency"></select>
+    <div class="tg hide-m" id="lang"><button data-l="en">EN</button><button data-l="bn">বাং</button></div>
+    <span id="acct"></span>
+  </div>
+</div></header>
+<main id="app"></main>
+<nav class="mnav" id="mnav"></nav>
+<footer class="ft"><div class="wrap">
+  <div class="ft-top">
+    <div class="ft-brand"><a class="logo light" href="#/"><i><img src="/static/brand/icon-96.png" alt="" width="34" height="34"></i><span>Product <em>Radar</em></span></a>
+      <p>Find products that sell before you buy stock. Live demand, real marketplace prices, supplier cost and season, with the source for every number.</p>
+      <a class="btn g sm" href="#/login?m=signup">Start free</a></div>
+    <div class="ft-col"><h4>Product</h4><a href="#/finder">Find products</a><a href="#/research">Deep research</a><a href="#/trending">Trending</a><a href="#/season">Season calendar</a><a href="#/ask">Ask AI</a></div>
+    <div class="ft-col"><h4>Resources</h4><a href="#/ideas">Product ideas</a><a href="#/pricing">Pricing</a><a href="#/setup">Data setup</a><a href="#/projects">Projects</a></div>
+    <div class="ft-col"><h4>Account</h4><a href="#/dashboard">Dashboard</a><a href="#/login?m=login">Log in</a><a href="#/login?m=signup">Create account</a><a href="#/adminlogin">Admin console</a></div>
+  </div>
+  <div class="ft-bot"><span>© <span id="yr">2026</span> Product Radar. Not financial advice. Test small before you buy big.</span><span>Rates by <a href="https://www.exchangerate-api.com" target="_blank" rel="noopener">Exchange Rate API</a> · Trends by Google</span></div>
+</div></footer>
+<div id="modal"></div>
+<script src="/static/app.js?v=__APP_VERSION__"></script>
+<script src="/static/screens.js?v=__APP_VERSION__"></script>
+<script src="/static/extra.js?v=__APP_VERSION__"></script>
+<script src="/static/ui.js?v=__APP_VERSION__"></script>
+</body>
+</html>

@@ -1,0 +1,44 @@
+# Local development / smoke test of both containers.
+#   cp .env.example .env    (edit ADMIN_PASSWORD at least)
+#   docker compose up --build
+#   Web: http://localhost:3000    API: http://localhost:8000
+# Production on Coolify uses the two Dockerfiles as two separate applications (see README).
+
+services:
+  api:
+    build:
+      context: ./apps/api
+      args:
+        APP_VERSION: ${APP_VERSION:-dev}
+    env_file:
+      - path: ./apps/api/.env
+        required: false
+    environment:
+      SECRET_KEY: ${SECRET_KEY:-local-dev-secret-key-change-me-0123456789abcdef}
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@example.com}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-change-me-local-admin}
+      CORS_ORIGINS: http://localhost:3000
+      COOKIE_SECURE: "0"
+      PROXY_COUNT: "0"
+      AUTO_REFRESH: ${AUTO_REFRESH:-0}
+    ports:
+      - "8000:8000"
+    volumes:
+      - api-data:/data
+    restart: unless-stopped
+
+  web:
+    build:
+      context: ./apps/web
+      args:
+        APP_VERSION: ${APP_VERSION:-dev}
+    environment:
+      API_URL: http://localhost:8000
+    ports:
+      - "3000:80"
+    depends_on:
+      - api
+    restart: unless-stopped
+
+volumes:
+  api-data:

@@ -1,0 +1,79 @@
+{
+ "note": "Edit prices and limits here. Prices are placeholders for you to decide.",
+ "contact": "hello@yourdomain.com",
+ "launch_offer": {
+  "on": false,
+  "text": "Launch price: first month 50% off",
+  "ends": "2026-12-31"
+ },
+ "plans": {
+  "guest": {
+   "name": "Guest",
+   "searches_per_day": 2,
+   "ideas": 8,
+   "saved": 0,
+   "videos": true,
+   "limit_msg": "You used today's 2 free checks. Create a free account to get 5 a day.",
+   "ai_per_month": 0,
+   "finder": 3,
+   "projects": 0
+  },
+  "free": {
+   "name": "Free",
+   "searches_per_day": 5,
+   "ideas": 12,
+   "saved": 5,
+   "videos": true,
+   "limit_msg": "You used today's 5 free checks. Pro gives you 60 a day.",
+   "ai_per_month": 3,
+   "finder": 5,
+   "projects": 3
+  },
+  "pro": {
+   "name": "Pro",
+   "searches_per_day": 60,
+   "ideas": 999,
+   "saved": 100,
+   "videos": true,
+   "limit_msg": "You used today's 60 checks. Business gives you 300 a day.",
+   "ai_per_month": 40,
+   "finder": 10,
+   "projects": 50
+  },
+  "business": {
+   "name": "Business",
+   "searches_per_day": 300,
+   "ideas": 999,
+   "saved": 1000,
+   "videos": true,
+   "limit_msg": "Daily limit reached. Contact us for more.",
+   "ai_per_month": 200,
+   "finder": 10,
+   "projects": 500
+  }
+ },
+ "prices": {
+  "free": {
+   "USD": 0,
+   "BDT": 0
+  },
+  "pro": {
+   "USD": 9,
+   "BDT": 490
+  },
+  "business": {
+   "USD": 29,
+   "BDT": 1490
+  }
+ },
+ "checkout": {
+  "pro": {
+   "USD": "",
+   "BDT": ""
+  },
+  "business": {
+   "USD": "",
+   "BDT": ""
+  }
+ }
+}
