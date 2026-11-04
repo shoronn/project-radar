@@ -17,12 +17,12 @@ head = function(){
   headBase2();
   if (!S.me) return;
   const r = route().name;
-  $("#acct").innerHTML = `${S.admin ? `<a class="btn sm ${r === "admin" ? "k" : "w"}" href="#/admin">${icon("shield", 16)}<span class="hide-s"> ${t("admin")}</span></a> ` : ""}<a class="btn sm ${r === "dashboard" ? "k" : "y"}" href="#/dashboard">${icon("grid", 16)}<span class="hide-s"> ${t("dash")}</span></a> <button class="btn sm w" id="lo">${t("logout")}</button>`;
-  $("#lo").onclick = async () => { await api("/api/logout", {method: "POST"}); await loadMe(); location.hash = "#/" };
+  $("#acct").innerHTML = `${S.admin ? `<a class="btn sm ${r === "admin" ? "k" : "w"}" href="/admin">${icon("shield", 16)}<span class="hide-s"> ${t("admin")}</span></a> ` : ""}<a class="btn sm ${r === "dashboard" ? "k" : "y"}" href="/dashboard">${icon("grid", 16)}<span class="hide-s"> ${t("dash")}</span></a> <button class="btn sm w" id="lo">${t("logout")}</button>`;
+  $("#lo").onclick = async () => { await api("/api/logout", {method: "POST"}); await loadMe(); go("/") };
 };
 SECTION.dashboard = "dashboard"; SECTION.admin = "admin";
 const toastBase = toast;                                // after creating an account, open the dashboard
-toast = function(m){ toastBase(m); if (/^Account created/.test(m)) setTimeout(() => { location.hash = "#/dashboard" }, 200) };
+toast = function(m){ toastBase(m); if (/^Account created/.test(m)) setTimeout(() => { go("/dashboard") }, 200) };
 
 /* ---------- real photos ---------- */
 const photo = (p, alt) => p && p.image ? `<img loading="lazy" referrerpolicy="no-referrer" src="${esc(p.image)}" alt="${esc(alt || p.name || "")}" data-fb="noimg">` : noImg;
@@ -106,7 +106,7 @@ async function seasonCard(el, kws, first, opt = {}){
       <div class="tg" id="scm"><button data-m="candle" class="${mode === "candle" ? "on" : ""}">Candles</button><button data-m="line" class="${mode === "line" ? "on" : ""}">Line</button></div></div></div><div class="skel" style="margin-top:14px"></div>`;
     let d; try { d = await api(`/api/season?kw=${encodeURIComponent(kw)}&country=${opt.country || S.country}`) } catch(e){ d = {candles: []} }
     const C = d.candles || [], cw = el.clientWidth - 46;
-    el.querySelector(".skel").outerHTML = C.length < 3 ? `<div class="embed" style="margin-top:14px"><iframe loading="lazy" title="Google Trends, 5 years" src="${trendsMulti([kw], opt.country || S.country, "today 5-y")}"></iframe></div><p class="mut" style="margin:8px 0 0">Live chart straight from Google Trends (5 years). Add SERPAPI_KEY to get the monthly up and down candles and the season summary. <a href="#/setup">Setup guide</a></p>` :
+    el.querySelector(".skel").outerHTML = C.length < 3 ? `<div class="embed" style="margin-top:14px"><iframe loading="lazy" title="Google Trends, 5 years" src="${trendsMulti([kw], opt.country || S.country, "today 5-y")}"></iframe></div><p class="mut" style="margin:8px 0 0">Live chart straight from Google Trends (5 years). Add SERPAPI_KEY to get the monthly up and down candles and the season summary. <a href="/setup">Setup guide</a></p>` :
       `${seasonSummary(d)}<div class="cwrap">${candleSVG(C, mode, cw)}<div class="ctip"></div></div>
        <div class="leg">${mode === "line" ? `<span><i style="background:#0B8A7A"></i>Average search interest per month</span>` : `<span><i style="background:#1FB57A"></i>Up month: ended higher than it started</span><span><i style="background:#EF5A5F"></i>Down month: ended lower</span><span><i class="wk"></i>Thin line: highest and lowest week</span>`}</div>
        <h4 style="margin:16px 0 4px">Typical year (all ${Math.round(C.length / 12) >= 2 ? "years" : "data"} averaged)</h4>${patternSVG(d.pattern, cw)}
@@ -135,9 +135,9 @@ VIEWS.home = async r => {
   const soon = S.ideas.filter(i => seasonState(i) !== "off").slice(0, 8);
   const list = soon.length >= 4 ? soon : S.ideas.slice(0, 8);
   const pk = i => peaks(i, S.country), m = new Date().getMonth();
-  const html = `<section class="sec" id="soon" style="padding:34px 0 10px"><div class="wrap"><div class="row" style="justify-content:space-between;margin-bottom:14px"><h2>${S.lang === "bn" ? "সামনে যেগুলোর মৌসুম" : "Coming into season"}</h2><a class="btn sm w" href="#/season">Season calendar →</a></div>
+  const html = `<section class="sec" id="soon" style="padding:34px 0 10px"><div class="wrap"><div class="row" style="justify-content:space-between;margin-bottom:14px"><h2>${S.lang === "bn" ? "সামনে যেগুলোর মৌসুম" : "Coming into season"}</h2><a class="btn sm w" href="/season">Season calendar →</a></div>
     <div class="soon">${list.map(i => { const st = seasonState(i);
-      return `<a class="card sn" href="#/research?q=${encodeURIComponent(i.kw)}"><span class="ph">${photo(i.photo, i.name)}<span class="tag ${st === "now" ? "g" : st === "soon" ? "y" : ""}">${st === "now" ? "In season" : st === "soon" ? "Soon" : "Off season"}</span></span>
+      return `<a class="card sn" href="/research?q=${encodeURIComponent(i.kw)}"><span class="ph">${photo(i.photo, i.name)}<span class="tag ${st === "now" ? "g" : st === "soon" ? "y" : ""}">${st === "now" ? "In season" : st === "soon" ? "Soon" : "Off season"}</span></span>
         <b>${esc(S.lang === "bn" ? i.bn : i.name)}</b><span class="mut">${esc(i.why)}</span>
         <span class="mm">${MS.map((x, k) => `<i class="${pk(i).includes(k + 1) ? "on" : ""} ${k === m ? "now" : ""}" title="${x}"></i>`).join("")}</span>
         ${i.photo && i.photo.price ? `<span class="pr">from ${money(i.photo.price, i.photo.cur)} <span class="mut">· ${esc((i.photo.source || "").replace(/\s*\(.*\)/, ""))}</span></span>` : ""}</a>` }).join("")}</div></div></section>`;
@@ -195,7 +195,7 @@ async function dashboardView(){
   const hot = tr ? tr.rows.filter(x => x.products && x.products.length).slice(0, 4) : [];
   $("#app").innerHTML = `<section class="sec dash" style="padding-top:28px"><div class="wrap">
     <div class="row" style="justify-content:space-between;gap:12px;margin-bottom:18px"><div><div class="mut">${t("dash")}</div><h2>Hi ${esc(nm)}</h2></div>
-      <div class="row"><span class="tag ${free ? "" : "y"}">${esc(U.plan_name)} plan${U.until ? " · until " + esc(U.until) : ""}</span>${free ? `<a class="btn g sm" href="#/pricing">Upgrade</a>` : ""}<a class="btn sm" href="#/research">${icon("flask", 16)} New research</a></div></div>
+      <div class="row"><span class="tag ${free ? "" : "y"}">${esc(U.plan_name)} plan${U.until ? " · until " + esc(U.until) : ""}</span>${free ? `<a class="btn g sm" href="/pricing">Upgrade</a>` : ""}<a class="btn sm" href="/research">${icon("flask", 16)} New research</a></div></div>
     <div class="grid g4">
       ${kpi("search", "var(--mint)", "Product checks today", `${d.checks.used} <small>of ${d.checks.limit}</small>`, `${Math.max(0, d.checks.limit - d.checks.used)} left · resets at midnight`, meter(d.checks.used, d.checks.limit))}
       ${kpi("chat", "var(--pink)", "AI answers this month", `${d.ai.used} <small>of ${d.ai.limit}</small>`, d.ai.on ? `${Math.max(0, d.ai.limit - d.ai.used)} left` : "AI not connected yet", meter(d.ai.used, d.ai.limit))}
@@ -204,13 +204,13 @@ async function dashboardView(){
     </div>
     <div class="grid dash2" style="margin-top:20px">
       <div class="card"><div class="row" style="justify-content:space-between"><h3>Your checks, last 14 days</h3><span class="tag">${nf(d.checks.week.reduce((a, b) => a + b.n, 0))} total</span></div>${barsSVG(d.checks.week, "n", "#1FB57A", "checks")}</div>
-      <div class="card"><h3>Recently checked</h3>${d.recent.length ? `<div class="chips" style="margin-top:10px">${d.recent.map(x => `<a class="chip" href="#/research?q=${encodeURIComponent(x.q)}">${esc(x.q)} <span class="mut">${esc(x.country)}</span></a>`).join("")}</div>` : `<p class="mut">Nothing yet. <a href="#/research">Check your first product →</a></p>`}
-        ${d.saved.items.length ? `<h3 style="margin-top:18px">Shortlist</h3><div class="chips" style="margin-top:10px">${d.saved.items.map(x => `<a class="chip" href="#/research?q=${encodeURIComponent(x)}">${icon("bookmark", 14)} ${esc(x)}</a>`).join("")}</div>` : ""}</div>
+      <div class="card"><h3>Recently checked</h3>${d.recent.length ? `<div class="chips" style="margin-top:10px">${d.recent.map(x => `<a class="chip" href="/research?q=${encodeURIComponent(x.q)}">${esc(x.q)} <span class="mut">${esc(x.country)}</span></a>`).join("")}</div>` : `<p class="mut">Nothing yet. <a href="/research">Check your first product →</a></p>`}
+        ${d.saved.items.length ? `<h3 style="margin-top:18px">Shortlist</h3><div class="chips" style="margin-top:10px">${d.saved.items.map(x => `<a class="chip" href="/research?q=${encodeURIComponent(x)}">${icon("bookmark", 14)} ${esc(x)}</a>`).join("")}</div>` : ""}</div>
     </div>
-    <div class="row" style="justify-content:space-between;margin:28px 0 12px"><h3>${t("cont")}</h3><a class="btn sm w" href="#/projects">All projects →</a></div>
+    <div class="row" style="justify-content:space-between;margin:28px 0 12px"><h3>${t("cont")}</h3><a class="btn sm w" href="/projects">All projects →</a></div>
     ${d.projects.items.length ? `<div class="grid g3">${d.projects.items.slice(0, 3).map(projCard).join("")}</div>` : `<div class="card empty"><b>No projects yet</b>Open any product in Research and press “Save as project”.</div>`}
-    ${hot.length ? `<div class="row" style="justify-content:space-between;margin:28px 0 12px"><h3>Rising now in ${esc(cname(tr.country))}</h3><a class="btn sm w" href="#/trending">See all →</a></div>
-      <div class="soon">${hot.map(x => { const p = x.products[0]; return `<a class="card sn" href="#/research?q=${encodeURIComponent(x.kw)}"><span class="ph">${photo(p, p.name)}${x.mom ? `<span class="tag ${x.mom >= 1 ? "g" : "r"}">${x.mom >= 1 ? "▲" : "▼"} ${Math.abs(Math.round((x.mom - 1) * 100))}%</span>` : ""}</span><b>${esc(x.idea ? x.idea.name : x.kw)}</b><span class="pr">${money(p.price, p.cur)} <span class="mut">· ${esc(p.source)}</span></span></a>` }).join("")}</div>` : ""}
+    ${hot.length ? `<div class="row" style="justify-content:space-between;margin:28px 0 12px"><h3>Rising now in ${esc(cname(tr.country))}</h3><a class="btn sm w" href="/trending">See all →</a></div>
+      <div class="soon">${hot.map(x => { const p = x.products[0]; return `<a class="card sn" href="/research?q=${encodeURIComponent(x.kw)}"><span class="ph">${photo(p, p.name)}${x.mom ? `<span class="tag ${x.mom >= 1 ? "g" : "r"}">${x.mom >= 1 ? "▲" : "▼"} ${Math.abs(Math.round((x.mom - 1) * 100))}%</span>` : ""}</span><b>${esc(x.idea ? x.idea.name : x.kw)}</b><span class="pr">${money(p.price, p.cur)} <span class="mut">· ${esc(p.source)}</span></span></a>` }).join("")}</div>` : ""}
     <div class="card" id="dcard" style="margin-top:24px"></div>
   </div></section>`;
   const follow = [].concat(d.recent.map(x => x.q), hot.map(x => x.kw), S.ideas.slice(0, 6).map(i => i.kw));
@@ -242,7 +242,7 @@ async function adminView(){
           return `<tr><td><b>${esc(cname(c))}</b></td><td>${f ? ago(f.updated) : "never"}${f && f.note ? `<div class="mut" style="white-space:normal">${esc(f.note)}</div>` : ""}</td><td>${D.tracked[c] || 0}</td><td>${D.photos[c] || 0} of ${D.ideas}</td><td style="white-space:nowrap"><button class="btn sm" data-rf="${c}">Refresh</button> <button class="btn sm w" data-ri="${c}">Photos</button></td></tr>` }).join("")}</table>
         ${D.running ? `<p class="mut">${icon("refresh", 14)} A refresh is running now.</p>` : ""}
         <h4 style="margin:16px 0 6px">Recent jobs</h4><table class="bt">${D.jobs.map(j => `<tr><td>${new Date(j.t * 1000).toLocaleString("en-GB")}</td><td>${esc(j.job)} ${esc(j.country)}</td><td><span class="tag ${j.ok ? "g" : "r"}">${j.ok ? "OK" : "Error"}</span></td><td style="white-space:normal">${esc(j.note || "")}</td></tr>`).join("") || `<tr><td class="mut">No jobs yet</td></tr>`}</table></div>
-      <div class="card"><h3>Top searches (30 days)</h3><table class="bt" style="margin-top:10px"><tr><th>Product</th><th>Country</th><th>People</th></tr>${o.top_searches.map(x => `<tr><td><a href="#/research?q=${encodeURIComponent(x.q)}">${esc(x.q)}</a></td><td>${esc(x.country)}</td><td>${x.n}</td></tr>`).join("") || `<tr><td class="mut">No searches yet</td></tr>`}</table>
+      <div class="card"><h3>Top searches (30 days)</h3><table class="bt" style="margin-top:10px"><tr><th>Product</th><th>Country</th><th>People</th></tr>${o.top_searches.map(x => `<tr><td><a href="/research?q=${encodeURIComponent(x.q)}">${esc(x.q)}</a></td><td>${esc(x.country)}</td><td>${x.n}</td></tr>`).join("") || `<tr><td class="mut">No searches yet</td></tr>`}</table>
         <h4 style="margin:16px 0 6px">Data sources</h4><div class="chips">${Object.entries(o.sources).map(([k, v]) => `<span class="chip"><span class="tag ${v ? "g" : "r"}">${v ? "On" : "Off"}</span> ${esc(k)}</span>`).join("")}<span class="chip"><span class="tag ${o.ai.on ? "g" : "r"}">${o.ai.on ? "On" : "Off"}</span> AI ${esc(o.ai.provider || "")}</span></div>
         <h4 style="margin:16px 0 6px">Users by plan</h4><div class="chips">${Object.entries(o.by_plan).map(([k, v]) => `<span class="chip">${esc(k)} <b>${v}</b></span>`).join("")}</div></div>
     </div>

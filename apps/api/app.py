@@ -109,6 +109,21 @@ def headers(resp):
     return resp
 
 
+# ---------------- JSON errors (the API never returns HTML) ----------------
+from werkzeug.exceptions import HTTPException  # noqa: E402
+
+
+@app.errorhandler(HTTPException)
+def http_error(e):
+    return jsonify(error=e.name.lower().replace(" ", "_"), message=e.description), e.code
+
+
+@app.errorhandler(Exception)
+def server_error(e):                                   # pragma: no cover
+    app.logger.exception("Unhandled error on %s %s", request.method, request.path)
+    return jsonify(error="server", message="Something went wrong on our side. Please try again."), 500
+
+
 # ---------------- login throttling (per IP + email, stored in SQLite so it survives restarts) ----------------
 LOGIN_MAX = int(os.getenv("LOGIN_MAX_ATTEMPTS", "8") or 8)
 LOGIN_WINDOW = int(os.getenv("LOGIN_WINDOW_MINUTES", "15") or 15) * 60

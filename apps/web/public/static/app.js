@@ -105,8 +105,8 @@ function matchIdea(q){
 const NAV = [["trending","flame"],["analyze","search"],["ideas","bulb"],["season","cal"],["pricing","card"],["saved","bookmark"]];
 function head(){
   const r = route().name;
-  $("#nav").innerHTML = NAV.map(n => `<a href="#/${n[0]}" class="${r === n[0] ? "on" : ""}">${t(n[0])}</a>`).join("");
-  $("#mnav").innerHTML = [["", "home", "Home"]].concat(NAV.filter(n => n[0] !== "pricing").map(n => [n[0], n[1], t(n[0])])).map(n => `<a href="#/${n[0]}" class="${r === (n[0] || "home") ? "on" : ""}">${icon(n[1], 20)}<br>${esc(n[2])}</a>`).join("");
+  $("#nav").innerHTML = NAV.map(n => `<a href="/${n[0]}" class="${r === n[0] ? "on" : ""}">${t(n[0])}</a>`).join("");
+  $("#mnav").innerHTML = [["", "home", "Home"]].concat(NAV.filter(n => n[0] !== "pricing").map(n => [n[0], n[1], t(n[0])])).map(n => `<a href="/${n[0]}" class="${r === (n[0] || "home") ? "on" : ""}">${icon(n[1], 20)}<br>${esc(n[2])}</a>`).join("");
   $("#cur").innerHTML = CURS.map(c => `<option ${c === S.cur ? "selected" : ""}>${c}</option>`).join("");
   $$("#lang button").forEach(b => b.classList.toggle("on", b.dataset.l === S.lang));
   document.documentElement.lang = S.lang;
@@ -143,15 +143,60 @@ function auth(mode, why){
 }
 function upgrade(msg){
   $("#modal").innerHTML = `<div class="modal" id="mb"><div class="card"><h2 style="font-size:26px">Keep going</h2><p>${esc(msg)}</p>
-    <div class="row"><a class="btn g" href="#/pricing" id="ug">See plans</a>${S.me ? "" : `<button class="btn w" id="ua">Create free account</button>`}<button class="btn w" id="mx">Later</button></div></div></div>`;
+    <div class="row"><a class="btn g" href="/pricing" id="ug">See plans</a>${S.me ? "" : `<button class="btn w" id="ua">Create free account</button>`}<button class="btn w" id="mx">Later</button></div></div></div>`;
   const close = () => $("#modal").innerHTML = "";
   $("#mx").onclick = close; $("#ug").onclick = close; if ($("#ua")) $("#ua").onclick = () => auth("signup");
 }
 
 /* ---------- router ---------- */
-function route(){ const h = location.hash.replace(/^#\/?/, ""); const [p, qs] = h.split("?"); return {name: p || "home", q: new URLSearchParams(qs || "")} }
-window.addEventListener("hashchange", () => { render(); scrollTo(0, 0) });
-function render(){ head(); const r = route(); (VIEWS[r.name] || VIEWS.home)(r) }
+/* Clean URLs with the History API: /research?q=moon%20lamp, /dashboard, /admin …
+   Keep ROUTES in sync with the route list in apps/web/nginx/default.conf.template (unknown paths get HTTP 404). */
+const ROUTES = ["home", "trending", "analyze", "ideas", "season", "pricing", "saved", "dashboard", "admin", "report", "finder",
+                "setup", "login", "research", "projects", "ask", "adminlogin", "apikeys"];
+const TITLES = {home: "Find products that sell", trending: "Trending products", analyze: "Analyze a product", ideas: "Product ideas", season: "Season calendar",
+                pricing: "Pricing", saved: "Shortlist", dashboard: "Dashboard", admin: "Admin", report: "Report", finder: "Product Finder", setup: "Data setup",
+                login: "Log in", research: "Deep research", projects: "Projects", ask: "Ask AI", adminlogin: "Admin log in", apikeys: "API keys", notfound: "Page not found"};
+function route(){
+  const p = location.pathname.replace(/^\/+|\/+$/g, "");
+  const name = p === "" || p === "index.html" ? "home" : ROUTES.includes(p) ? p : "notfound";
+  return {name, path: p, q: new URLSearchParams(location.search)};
+}
+let _lastLoc = location.pathname + location.search;
+/* go("/research?q=x") navigates without a page load. Accepts legacy "#/x" too. */
+function go(to, opt){
+  to = String(to || "/").replace(/^#\/?/, "/");
+  if (!to.startsWith("/") || to.startsWith("//")) to = "/" + to.replace(/^\/+/, "");
+  const cur = location.pathname + location.search + location.hash;
+  if (to !== cur) history[(opt && opt.replace) ? "replaceState" : "pushState"](null, "", to);
+  _lastLoc = location.pathname + location.search;
+  render();
+  if (location.hash.length > 1){ const t = document.getElementById(decodeURIComponent(location.hash.slice(1))); if (t) { t.scrollIntoView(); return } }
+  scrollTo(0, 0);
+}
+window.addEventListener("popstate", () => {
+  const now = location.pathname + location.search;
+  if (now === _lastLoc) return;            // only the #fragment changed (in-page anchor): don't re-render
+  _lastLoc = now; render();
+});
+/* Same-origin <a href="/..."> clicks are handled by the router; new tabs, downloads, external and #anchor links behave normally. */
+document.addEventListener("click", e => {
+  if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+  const a = e.target.closest && e.target.closest("a[href]");
+  if (!a || (a.target && a.target !== "_self") || a.hasAttribute("download")) return;
+  const href = a.getAttribute("href");
+  if (!href || href.startsWith("#") || href.startsWith("//") || /^[a-z][a-z0-9+.-]*:/i.test(href)) return;
+  const u = new URL(href, location.href);
+  if (u.origin !== location.origin) return;
+  e.preventDefault();
+  const same = u.pathname + u.search === location.pathname + location.search;
+  if (same && u.hash) { history.pushState(null, "", u.hash); const t = document.getElementById(decodeURIComponent(u.hash.slice(1))); if (t) t.scrollIntoView(); return }
+  go(u.pathname + u.search + u.hash);
+});
+function render(){
+  head(); const r = route();
+  document.title = r.name === "home" ? "Product Radar: find products that sell" : (TITLES[r.name] || "Product Radar") + " | Product Radar";
+  (VIEWS[r.name] || VIEWS.notfound)(r);
+}
 
 /* ---------- shared bits ---------- */
 function searchBox(q, big){
@@ -159,7 +204,7 @@ function searchBox(q, big){
     <select id="sc" aria-label="Country">${COUNTRIES.map(c => `<option value="${c[0]}" ${c[0] === S.country ? "selected" : ""}>${c[1]}</option>`).join("")}</select>
     <button class="btn g" type="submit">${t("check")} →</button></form>`;
 }
-function bindSearch(){ const f = $("#sf"); if (!f) return; f.onsubmit = e => { e.preventDefault(); const q = $("#sq").value.trim(); S.country = $("#sc").value; ls.set("country", S.country); if (q) location.hash = "#/research?q=" + encodeURIComponent(q) } }
+function bindSearch(){ const f = $("#sf"); if (!f) return; f.onsubmit = e => { e.preventDefault(); const q = $("#sq").value.trim(); S.country = $("#sc").value; ls.set("country", S.country); if (q) go("/research?q=" + encodeURIComponent(q)) } }
 function ideaCard(i, compact){
   const [em, bg] = catIcon(i.cat), st = seasonState(i);
   return `<article class="card idea"><div class="top"><span class="ic" style="background:${bg}">${em}</span><div><h3>${esc(S.lang === "bn" ? i.bn : i.name)}</h3><span class="mut">${esc(i.cat)}</span></div></div>
@@ -167,7 +212,7 @@ function ideaCard(i, compact){
       <span class="tag b">Budget: ${esc(i.budget)}</span>${i.dropship ? `<span class="tag p">Dropship OK</span>` : ""}${i.fragile ? `<span class="tag r">Fragile</span>` : ""}</div>
     <p class="why" style="margin:0"><b>Why they buy:</b> ${esc(i.why)}</p>
     ${compact ? "" : `<p class="hook" style="margin:0">“${esc(i.hook)}”</p><p class="mut" style="margin:0"><b>Sell with:</b> ${esc(i.cross)} · <b>Watch out:</b> ${esc(i.risk)}</p>`}
-    <div class="act"><a class="btn sm" href="#/research?q=${encodeURIComponent(i.kw)}">Check live data →</a>${S.me ? `<button class="btn sm w" data-save="${esc(i.name)}">${icon("bookmark", 16)} Save</button>` : ""}</div></article>`;
+    <div class="act"><a class="btn sm" href="/research?q=${encodeURIComponent(i.kw)}">Check live data →</a>${S.me ? `<button class="btn sm w" data-save="${esc(i.name)}">${icon("bookmark", 16)} Save</button>` : ""}</div></article>`;
 }
 function bindSave(){ $$("[data-save]").forEach(b => b.onclick = () => saveItem(b.dataset.save)) }
 async function saveItem(name){
@@ -188,20 +233,20 @@ function home(){
       <h1 style="margin-top:16px">${t("h1a")} <span class="hl">${t("h1b")}</span></h1>
       <p class="lead">${t("lead")}</p>
       ${searchBox("", true)}
-      <div class="row try"><span class="mut"><b>${t("try")}</b></span>${["moon lamp","instant water heater tap","neck fan","led strip lights"].map(x => `<a class="chip" href="#/research?q=${encodeURIComponent(x)}">${x}</a>`).join("")}</div>
+      <div class="row try"><span class="mut"><b>${t("try")}</b></span>${["moon lamp","instant water heater tap","neck fan","led strip lights"].map(x => `<a class="chip" href="/research?q=${encodeURIComponent(x)}">${x}</a>`).join("")}</div>
       ${S.me ? "" : `<p class="mut" style="margin-top:12px">${icon("check", 16)} ${t("noSignup")}</p>`}
     </div>
     <div class="card season-card" style="position:relative">
       <span class="sticker">${mon()[new Date().getMonth()]}</span>
       <h3>${t("inSeason")}</h3><p class="mut" style="margin:4px 0 10px">${S.country === "WW" ? "Northern hemisphere" : esc((COUNTRIES.find(c => c[0] === S.country) || [0, ""])[1])} · from our idea guide</p>
-      ${soon.map(i => { const [em, bg] = catIcon(i.cat), st = seasonState(i); return `<a class="it" style="text-decoration:none" href="#/research?q=${encodeURIComponent(i.kw)}"><span class="ic" style="background:${bg}">${em}</span><div style="flex:1"><b>${esc(S.lang === "bn" ? i.bn : i.name)}</b><div class="mut">${esc(i.why)}</div></div><span class="tag ${st === "now" ? "g" : "y"}">${st === "now" ? "Now" : "Soon"}</span></a>` }).join("") || `<p class="mut">Loading ideas…</p>`}
-      <a class="btn w sm" style="margin-top:10px;width:100%" href="#/season">See the full season calendar</a>
+      ${soon.map(i => { const [em, bg] = catIcon(i.cat), st = seasonState(i); return `<a class="it" style="text-decoration:none" href="/research?q=${encodeURIComponent(i.kw)}"><span class="ic" style="background:${bg}">${em}</span><div style="flex:1"><b>${esc(S.lang === "bn" ? i.bn : i.name)}</b><div class="mut">${esc(i.why)}</div></div><span class="tag ${st === "now" ? "g" : "y"}">${st === "now" ? "Now" : "Soon"}</span></a>` }).join("") || `<p class="mut">Loading ideas…</p>`}
+      <a class="btn w sm" style="margin-top:10px;width:100%" href="/season">See the full season calendar</a>
     </div>
   </div></section>
 
   <div class="ticker" aria-hidden="true"><div>${Array(2).fill(["Google Trends","Google Shopping prices","AliExpress supplier cost","Daraz (Bangladesh)","YouTube reviews","Profit calculator","Season calendar","Dropshipping ideas","Ad hooks","11 currencies"].map(x => `<span>★ ${x}</span>`).join("")).join("")}</div></div>
 
-  <section class="sec" style="padding-bottom:20px"><div class="wrap"><div class="row" style="justify-content:space-between;align-items:end;margin-bottom:22px"><div class="sec-h" style="margin:0"><h2>Trending right now</h2><p>Products people are searching for more and more. Real listings with photo and price under each one.</p></div><a class="btn k" href="#/trending">See all trending →</a></div><div id="hometrend"><div class="card"><div class="skel"></div><div class="skel" style="width:60%"></div></div></div></div></section>
+  <section class="sec" style="padding-bottom:20px"><div class="wrap"><div class="row" style="justify-content:space-between;align-items:end;margin-bottom:22px"><div class="sec-h" style="margin:0"><h2>Trending right now</h2><p>Products people are searching for more and more. Real listings with photo and price under each one.</p></div><a class="btn k" href="/trending">See all trending →</a></div><div id="hometrend"><div class="card"><div class="skel"></div><div class="skel" style="width:60%"></div></div></div></div></section>
 
   <section class="sec pain"><div class="wrap">
     <div class="sec-h"><h2>${t("painT")}</h2><p>${t("painP")}</p></div>
@@ -235,7 +280,7 @@ function home(){
   <section class="sec" style="padding-top:0"><div class="wrap">
     <div class="sec-h"><h2>${t("ideasT")}</h2><p>${t("ideasP")}</p></div>
     <div class="grid g3">${(l => l.slice(0, l.length >= 6 ? 6 : 3))(S.ideas.filter(i => seasonState(i) !== "off").concat(S.ideas.filter(i => seasonState(i) === "off"))).map(i => ideaCard(i, true)).join("")}</div>
-    <div style="margin-top:24px"><a class="btn" href="#/ideas">Browse all ideas →</a></div>
+    <div style="margin-top:24px"><a class="btn" href="/ideas">Browse all ideas →</a></div>
   </div></section>
 
   <section class="sec" style="background:var(--white);border-top:var(--b);border-bottom:var(--b)"><div class="wrap">
@@ -246,7 +291,7 @@ function home(){
     <div class="sec-h"><h2>${t("faqT")}</h2></div>${FAQ.map(f => `<details><summary>${esc(f[0])}</summary><p>${esc(f[1])}</p></details>`).join("")}
   </div></section>
 
-  <section class="sec cta" style="border-top:var(--b)"><div class="wrap"><h2>${t("ctaT")}</h2><p style="font-size:18px;margin:12px 0 24px">Free to start. No card needed.</p><a class="btn" href="#/analyze">${t("ctaB")} →</a></div></section>`;
+  <section class="sec cta" style="border-top:var(--b)"><div class="wrap"><h2>${t("ctaT")}</h2><p style="font-size:18px;margin:12px 0 24px">Free to start. No card needed.</p><a class="btn" href="/analyze">${t("ctaB")} →</a></div></section>`;
   bindSearch(); bindPlans(); loadTrend(S.country).then(d => { const el = $("#hometrend"); if (el && d) el.innerHTML = d.rows.length ? d.rows.slice(0, 3).map((r, i) => trendRow(r, i, d)).join("") : `<div class="card empty">${esc(d.note || "Trending data is being collected.")}</div>` }).catch(() => { const el = $("#hometrend"); if (el) el.innerHTML = "" });
   const coi = () => { const a = +$("#c1").value || 0, b = +$("#c2").value || 0, h = +$("#c3").value || 0; $("#co").textContent = money(a + b, S.cur, {int: 1}); $("#co2").textContent = `plus ${h} hours of your time. A 30-second check costs nothing.` };
   ["#c1","#c2","#c3"].forEach(s => $(s).oninput = coi); coi();
@@ -311,12 +356,12 @@ async function analyzeView(r){
     <p class="mut" id="left" style="margin-top:10px">${S.limits ? `${Math.max(0, S.limits.searches_per_day - S.used)} of ${S.limits.searches_per_day} checks left today` : ""}${S.me ? "" : ` · <a href="#" id="mk">Create a free account</a> for more`}</p>
     <div id="res" style="margin-top:26px"></div></div></section>`;
   bindSearch(); if ($("#mk")) $("#mk").onclick = e => { e.preventDefault(); auth("signup") };
-  if (!q){ $("#res").innerHTML = `<div class="card empty"><div>${icon("search", 44)}</div><h3>Type any product above</h3><p class="mut">Or start from an idea that is heading into season.</p><a class="btn" href="#/ideas">Browse ideas</a></div>`; return }
+  if (!q){ $("#res").innerHTML = `<div class="card empty"><div>${icon("search", 44)}</div><h3>Type any product above</h3><p class="mut">Or start from an idea that is heading into season.</p><a class="btn" href="/ideas">Browse ideas</a></div>`; return }
   $("#res").innerHTML = `<div class="card"><div class="skel" style="width:40%"></div><div class="skel"></div><div class="skel" style="width:70%"></div><p class="mut">Checking Google Trends, marketplaces and suppliers…</p></div>`;
   let d;
   try { d = await api(`/api/analyze?q=${encodeURIComponent(q)}&country=${S.country}`); S.used++; if (S.limits && $("#left")) $("#left").firstChild.textContent = `${Math.max(0, S.limits.searches_per_day - S.used)} of ${S.limits.searches_per_day} checks left today` + (S.me ? "" : " · ") }
   catch(e){
-    if (e.code === 402) { $("#res").innerHTML = `<div class="card empty"><h3>Daily limit reached</h3><p>${esc(e.body.message)}</p><a class="btn g" href="#/pricing">See plans</a></div>`; return upgrade(e.body.message) }
+    if (e.code === 402) { $("#res").innerHTML = `<div class="card empty"><h3>Daily limit reached</h3><p>${esc(e.body.message)}</p><a class="btn g" href="/pricing">See plans</a></div>`; return upgrade(e.body.message) }
     $("#res").innerHTML = `<div class="card empty"><h3>Could not check this product</h3><p class="mut">${esc(e.message)}</p></div>`; return }
   S.last = d; drawResult(d);
 }
@@ -360,7 +405,7 @@ function drawResult(d){
     <div class="card"><div class="row" style="justify-content:space-between"><h3>Search interest, last 12 months</h3><span class="tag">Live from Google</span></div>
       <div class="embed" style="margin-top:12px"><iframe loading="lazy" title="Google Trends interest over time" src="${trendsURL("TIMESERIES", d.q, geo)}"></iframe></div>${d.trends && d.trends.ok ? `<p class="mut" style="margin:8px 0 0">Average interest in the last 4 weeks: <b>${Math.round(avg(d.trends.series.slice(-4).map(x => x.v)))}</b> out of 100.</p>` : ""}</div>
     <div class="card"><div class="row" style="justify-content:space-between"><h3>What people search with it</h3><span class="tag">Live from Google</span></div>
-      ${d.trends && d.trends.ok && d.trends.rising.length ? `<div style="margin-top:12px">${d.trends.rising.slice(0, 8).map(x => `<div class="row" style="justify-content:space-between;border-top:2px dashed var(--line);padding:7px 0"><a href="#/research?q=${encodeURIComponent(x.q)}" style="font-weight:600">${esc(x.q)}</a><span class="tag ${/breakout/i.test(x.v) ? "r" : "y"}">${esc(x.v)}</span></div>`).join("")}</div>`
+      ${d.trends && d.trends.ok && d.trends.rising.length ? `<div style="margin-top:12px">${d.trends.rising.slice(0, 8).map(x => `<div class="row" style="justify-content:space-between;border-top:2px dashed var(--line);padding:7px 0"><a href="/research?q=${encodeURIComponent(x.q)}" style="font-weight:600">${esc(x.q)}</a><span class="tag ${/breakout/i.test(x.v) ? "r" : "y"}">${esc(x.v)}</span></div>`).join("")}</div>`
         : `<div class="embed" style="margin-top:12px"><iframe loading="lazy" title="Google Trends related queries" src="${trendsURL("RELATED_QUERIES", d.q, geo)}"></iframe></div>`}</div>
   </div>
 
@@ -406,7 +451,7 @@ function ideasView(){
   const draw = () => {
     ls.set("ideaf", f);
     const list = S.ideas.filter(i => (!f.cat || i.cat === f.cat) && (!f.budget || i.budget === f.budget) && (!f.ds || i.dropship) && (!f.when || (f.when === "now" ? seasonState(i) === "now" : seasonState(i) !== "off")));
-    $("#il").innerHTML = list.map(i => ideaCard(i)).join("") + (S.locked ? `<div class="card locked"><div><div>${icon("lock", 40)}</div><h3>${S.locked} more ideas</h3><p>Full guide with all seasons and categories.</p><a class="btn k" href="#/pricing">Unlock with Pro</a></div></div>` : "") || `<div class="card empty">No ideas match. Clear a filter.</div>`;
+    $("#il").innerHTML = list.map(i => ideaCard(i)).join("") + (S.locked ? `<div class="card locked"><div><div>${icon("lock", 40)}</div><h3>${S.locked} more ideas</h3><p>Full guide with all seasons and categories.</p><a class="btn k" href="/pricing">Unlock with Pro</a></div></div>` : "") || `<div class="card empty">No ideas match. Clear a filter.</div>`;
     bindSave();
   };
   $("#app").innerHTML = `<section class="sec" style="padding-top:34px"><div class="wrap"><div class="sec-h"><h2>${t("ideasT")}</h2><p>${t("ideasP")}</p></div>
@@ -429,12 +474,12 @@ function seasonView(){
   const draw = cat => { ls.set("seasonc", cat);
     const list = S.ideas.filter(i => !cat || i.cat === cat);
     $("#hm").innerHTML = `<span></span>${mon().map((x, i) => `<span class="h ${i === m ? "now" : ""}">${x}</span>`).join("")}` +
-      list.map(i => { const p = peaks(i), [, bg] = catIcon(i.cat); return `<a class="nm" href="#/research?q=${encodeURIComponent(i.kw)}" title="${esc(i.name)}"><span class="mini">${catIcon(i.cat)[0]}</span> ${esc(S.lang === "bn" ? i.bn : i.name)}</a>` + MONTHS.map((_, k) => `<i style="background:${p.includes(k + 1) ? bg : "var(--cell)"}"></i>`).join("") }).join("");
+      list.map(i => { const p = peaks(i), [, bg] = catIcon(i.cat); return `<a class="nm" href="/research?q=${encodeURIComponent(i.kw)}" title="${esc(i.name)}"><span class="mini">${catIcon(i.cat)[0]}</span> ${esc(S.lang === "bn" ? i.bn : i.name)}</a>` + MONTHS.map((_, k) => `<i style="background:${p.includes(k + 1) ? bg : "var(--cell)"}"></i>`).join("") }).join("");
   };
   $("#app").innerHTML = `<section class="sec" style="padding-top:34px"><div class="wrap"><div class="sec-h"><h2>Season calendar</h2><p>Coloured months are peak selling months. Order stock 4 to 6 weeks before the colour starts. ${SOUTH.includes(S.country) ? "Weather items are flipped for the southern hemisphere." : ""}</p></div>
     <div class="filters"><select class="sel" id="scat"><option value="">All categories</option>${cats.map(x => `<option ${x === c ? "selected" : ""}>${esc(x)}</option>`).join("")}</select>
     <select class="sel" id="scc">${COUNTRIES.map(x => `<option value="${x[0]}" ${x[0] === S.country ? "selected" : ""}>${x[1]}</option>`).join("")}</select></div>
-    <div class="card scroll"><div class="hm" id="hm"></div></div>${S.locked ? `<div class="card row" style="margin-top:18px;background:var(--yellow);justify-content:space-between"><b>Showing ${S.ideas.length} of ${S.ideasTotal} products. The rest of the calendar is in Pro.</b><a class="btn k sm" href="#/pricing">Unlock all</a></div>` : ""}<p class="mut" style="margin-top:16px">${esc(S.ideasNote)} Festival dates such as Eid move each year.</p></div></section>`;
+    <div class="card scroll"><div class="hm" id="hm"></div></div>${S.locked ? `<div class="card row" style="margin-top:18px;background:var(--yellow);justify-content:space-between"><b>Showing ${S.ideas.length} of ${S.ideasTotal} products. The rest of the calendar is in Pro.</b><a class="btn k sm" href="/pricing">Unlock all</a></div>` : ""}<p class="mut" style="margin-top:16px">${esc(S.ideasNote)} Festival dates such as Eid move each year.</p></div></section>`;
   $("#scat").onchange = e => draw(e.target.value);
   $("#scc").onchange = e => { S.country = e.target.value; ls.set("country", S.country); seasonView() };
   draw(c);
@@ -449,7 +494,7 @@ async function savedView(){
   const draw = () => {
     $("#app").innerHTML = `<section class="sec" style="padding-top:34px"><div class="wrap"><div class="sec-h"><h2>Your shortlist</h2><p>Idea → Validate (check data) → Test (10 units or pre-orders) → Scale. Drop what fails, without guilt.</p></div>
       <form class="row" id="nf" style="margin-bottom:18px"><input id="ni" class="sel" style="flex:1;min-width:200px;background:var(--cell)" placeholder="Add a product name"><button class="btn">Add</button></form>
-      <div class="kan">${COLS.map((c, ci) => `<div class="col"><h3>${c}<span class="tag">${rows.filter(r => r.stage === ci).length}</span></h3>${rows.filter(r => r.stage === ci).map(r => `<div class="kc"><a href="#/research?q=${encodeURIComponent(r.item)}">${esc(r.item)}</a><div class="row">
+      <div class="kan">${COLS.map((c, ci) => `<div class="col"><h3>${c}<span class="tag">${rows.filter(r => r.stage === ci).length}</span></h3>${rows.filter(r => r.stage === ci).map(r => `<div class="kc"><a href="/research?q=${encodeURIComponent(r.item)}">${esc(r.item)}</a><div class="row">
         <span>${ci > 0 ? `<button data-mv="${esc(r.item)}|${ci - 1}" aria-label="Move left">←</button>` : ""} ${ci < 4 ? `<button data-mv="${esc(r.item)}|${ci + 1}" aria-label="Move right">→</button>` : ""}</span><button data-del="${esc(r.item)}" aria-label="Delete">✕</button></div></div>`).join("")}</div>`).join("")}</div></div></section>`;
     $("#nf").onsubmit = async e => { e.preventDefault(); const v = $("#ni").value.trim(); if (!v) return; try { await api("/api/saved", {method:"POST", body: JSON.stringify({item: v})}); rows.unshift({item: v, stage: 0}); draw() } catch(err){ err.code === 402 ? upgrade(err.message) : toast(err.message) } };
     $$("[data-mv]").forEach(b => b.onclick = async () => { const [it, st] = b.dataset.mv.split("|"); await api("/api/saved", {method:"POST", body: JSON.stringify({item: it, stage: +st})}); rows.find(r => r.item === it).stage = +st; draw() });
@@ -480,7 +525,7 @@ function trendRow(r, i, d){
     <div class="trow-h"><span class="rank" style="background:${col}">${i + 1}</span>
       <div style="flex:1;min-width:0"><h3>${esc(nameOf(r))}</h3><div class="row" style="gap:6px;margin-top:6px">${momTag(r)}${idea ? (s => s === "now" ? `<span class="tag g">In season</span>` : s === "soon" ? `<span class="tag y">Season soon</span>` : "")(seasonState(idea)) : ""}${best ? `<span class="tag p">★ Best to sell now</span>` : ""}${idea && idea.dropship ? `<span class="tag b">Dropship OK</span>` : ""}</div></div>
       <div class="hide-s">${spark(r.series, col)}</div>
-      <a class="btn sm" href="#/research?q=${encodeURIComponent(r.kw)}">Full check →</a></div>
+      <a class="btn sm" href="/research?q=${encodeURIComponent(r.kw)}">Full check →</a></div>
     ${idea ? `<p style="margin:12px 0 0"><b>Why people buy it:</b> ${esc(idea.why)}</p>` : ""}
     ${r.products.length ? `<div class="list" style="margin-top:14px">${r.products.map(prodCard).join("")}</div><p class="mut" style="margin:8px 0 0">Real listings, checked ${ago(r.products[0].fetched)}. Photo, title and price come from the same listing. Click to see it on the seller's site.</p>`
       : `<p class="mut" style="margin:12px 0 0">No listing with a working photo yet. ${S.sources["eBay"] || S.sources["Daraz"] ? "Try a full check." : "Connect a marketplace source to show products."}</p>`}
@@ -513,11 +558,18 @@ async function trendingView(r){
     ${d.live ? `<div class="card" style="margin-bottom:22px"><div class="row" style="justify-content:space-between"><h3>Google searches, last 12 months</h3><span class="tag">0 to 100 scale</span></div>${bigChart(d.rows)}
       <details class="help"><summary>What does this chart mean?</summary><p>Each line is one product. 100 is the week when that product was searched the most. A line climbing at the right end means more people are looking for it now. The numbers compare weeks for the same product, not how big one product is versus another.</p></details></div>` : ""}
     ${d.rows.map((x, i) => trendRow(x, i, d)).join("") || `<div class="card empty">${esc(d.note || "No data yet.")}</div>`}
-    ${d.locked ? `<div class="card row" style="background:var(--yellow);justify-content:space-between"><b>${d.locked} more trending products with listings are in Pro.</b><a class="btn k sm" href="#/pricing">Unlock all</a></div>` : ""}`;
-  $$("[data-tc]").forEach(b => b.onclick = () => { location.hash = "#/trending?c=" + b.dataset.tc });
+    ${d.locked ? `<div class="card row" style="background:var(--yellow);justify-content:space-between"><b>${d.locked} more trending products with listings are in Pro.</b><a class="btn k sm" href="/pricing">Unlock all</a></div>` : ""}`;
+  $$("[data-tc]").forEach(b => b.onclick = () => { go("/trending?c=" + b.dataset.tc) });
 }
 
 const VIEWS = {home, trending: trendingView, analyze: analyzeView, ideas: ideasView, season: seasonView, pricing, saved: savedView};
+VIEWS.notfound = () => {
+  $("#app").innerHTML = `<section class="sec"><div class="wrap" style="max-width:640px;text-align:center">
+    <div class="card" style="padding:48px 28px"><p class="mut" style="font-weight:600;letter-spacing:.08em">404</p>
+    <h1 style="margin:6px 0 10px">This page doesn't exist</h1>
+    <p class="mut">The link may be old or mistyped. Try the home page or search for a product.</p>
+    <div class="row" style="justify-content:center;gap:10px;margin-top:18px"><a class="btn g" href="/">Go to home</a><a class="btn w" href="/research">Deep research</a></div></div></div></section>`;
+};
 
 /* ---------- start ---------- */
 window.addEventListener("DOMContentLoaded", async () => {

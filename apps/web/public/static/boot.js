@@ -5,6 +5,11 @@
 (function () {
   try { var m = localStorage.getItem("theme"); if (m) document.documentElement.dataset.theme = m } catch (e) {}
 
+  // Old hash links (/#/dashboard, /#/research?q=x) -> clean URLs (/dashboard, /research?q=x)
+  if (/^#\//.test(location.hash)) {
+    try { history.replaceState(null, "", location.hash.slice(1) || "/"); } catch (e) {}
+  }
+
   // Broken product photos: data-fb="noimg" shows the placeholder, data-fb="rmpc" removes the whole product card.
   document.addEventListener("error", function (e) {
     var el = e.target;

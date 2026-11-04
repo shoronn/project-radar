@@ -995,3 +995,8 @@ body.shell-page .sh{flex:1}
 .sh-wrap .bt td:last-child{white-space:nowrap}
 .sh-wrap .chips{gap:8px}
 @media (max-width:1180px){.sh-wrap .dash2{grid-template-columns:1fr}}
+
+/* ================= shell pages (dashboard, admin, API keys): use the full width ================= */
+.sh-wrap{max-width:1600px;margin:0 auto}
+body.shell-page .bar .wrap{max-width:none;padding-left:24px;padding-right:24px}
+@media (min-width:1700px){.sh-wrap{padding-left:40px!important;padding-right:40px!important}}

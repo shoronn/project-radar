@@ -21,8 +21,8 @@ const NAVNAME = {finder: "discover", research: "research", projects: "projects",
 const SECTION = {finder: "finder", trending: "finder", ideas: "finder", season: "finder", research: "research", analyze: "research", projects: "projects", saved: "projects", report: "projects", ask: "ask", pricing: "pricing"};
 head = function(){
   const r = SECTION[route().name] || route().name;
-  $("#nav").innerHTML = NAV.map(n => `<a href="#/${n[0]}" class="${r === n[0] ? "on" : ""}">${t(NAVNAME[n[0]])}</a>`).join("");
-  $("#mnav").innerHTML = [["", "home", "home"]].concat(NAV.filter(n => n[0] !== "pricing")).map(n => `<a href="#/${n[0]}" class="${(r || "home") === (n[0] || "home") ? "on" : ""}">${icon(n[1], 20)}<br>${esc(t(NAVNAME[n[0]] || n[2]))}</a>`).join("");
+  $("#nav").innerHTML = NAV.map(n => `<a href="/${n[0]}" class="${r === n[0] ? "on" : ""}">${t(NAVNAME[n[0]])}</a>`).join("");
+  $("#mnav").innerHTML = [["", "home", "home"]].concat(NAV.filter(n => n[0] !== "pricing")).map(n => `<a href="/${n[0]}" class="${(r || "home") === (n[0] || "home") ? "on" : ""}">${icon(n[1], 20)}<br>${esc(t(NAVNAME[n[0]] || n[2]))}</a>`).join("");
   $("#cur").innerHTML = CURS.map(c => `<option ${c === S.cur ? "selected" : ""}>${c}</option>`).join("");
   $$("#lang button").forEach(b => b.classList.toggle("on", b.dataset.l === S.lang));
   document.documentElement.lang = S.lang;
@@ -32,7 +32,7 @@ head = function(){
   if ($("#li")) $("#li").onclick = () => auth("login");
   if ($("#su")) $("#su").onclick = () => auth("signup");
 };
-const discoverTabs = a => `<div class="tabs dtabs">${[["finder", "Find for me"], ["trending", "Trending"], ["ideas", "Ideas"], ["season", "Season calendar"]].map(x => `<a class="${a === x[0] ? "on" : ""}" href="#/${x[0]}">${x[1]}</a>`).join("")}</div>`;
+const discoverTabs = a => `<div class="tabs dtabs">${[["finder", "Find for me"], ["trending", "Trending"], ["ideas", "Ideas"], ["season", "Season calendar"]].map(x => `<a class="${a === x[0] ? "on" : ""}" href="/${x[0]}">${x[1]}</a>`).join("")}</div>`;
 for (const [k, fn] of [["trending", VIEWS.trending], ["ideas", VIEWS.ideas], ["season", VIEWS.season]]) {
   VIEWS[k] = async r => { await fn(r); const w = $("#app .wrap"); if (w && !$("#app .dtabs")) w.insertAdjacentHTML("afterbegin", discoverTabs(k)) };
 }
@@ -60,13 +60,13 @@ async function finderView(){
     $("#app").innerHTML = `<section class="sec" style="padding-top:28px"><div class="wrap">${discoverTabs("finder")}
       <div class="card finder"><div class="mut">Question ${step + 1} of ${FQ.length}</div><div class="prog"><i style="width:${(step) / FQ.length * 100}%"></i></div>
       <h2 style="margin:14px 0 18px">${q}</h2><div class="opts ${opts.length > 6 ? "many" : ""}">${opts.map(o => `<button class="opt ${A[k] === o[0] ? "on" : ""}" data-v="${esc(o[0])}">${k === "category" && o[0] ? `<span class="mini">${catIcon(o[0])[0]}</span>` : ""}${esc(o[1])}</button>`).join("")}</div>
-      <div class="row" style="margin-top:18px;justify-content:space-between">${step ? `<a class="btn w sm" href="#/finder?s=${step - 1}">Back</a>` : "<span></span>"}<span class="mut">Country: ${cname(S.country)} · change it in Research</span></div></div></div></section>`;
-    $$(".opt").forEach(b => b.onclick = () => { A[k] = b.dataset.v; ls.set("finder", A); location.hash = "#/finder?s=" + (step + 1) });
+      <div class="row" style="margin-top:18px;justify-content:space-between">${step ? `<a class="btn w sm" href="/finder?s=${step - 1}">Back</a>` : "<span></span>"}<span class="mut">Country: ${cname(S.country)} · change it in Research</span></div></div></div></section>`;
+    $$(".opt").forEach(b => b.onclick = () => { A[k] = b.dataset.v; ls.set("finder", A); go("/finder?s=" + (step + 1)) });
     return;
   }
   $("#app").innerHTML = `<section class="sec" style="padding-top:28px"><div class="wrap">${discoverTabs("finder")}<div id="fr"><div class="card"><div class="skel"></div><div class="skel" style="width:60%"></div></div></div></div></section>`;
   let d; try { d = await api("/api/finder", {method: "POST", body: JSON.stringify(Object.assign({country: S.country}, A))}) } catch(e){ $("#fr").innerHTML = `<div class="card empty">${esc(e.message)}</div>`; return }
-  $("#fr").innerHTML = `<div class="row" style="justify-content:space-between;margin-bottom:16px"><div><h2>Products that fit you</h2><p class="mut" style="margin:4px 0 0">${esc([A.channel, A.budget && A.budget + " budget", A.category, A.audience, A.risk].filter(Boolean).join(" · "))} · ${cname(S.country)}</p></div><a class="btn w sm" href="#/finder?s=0">Change answers</a></div>
+  $("#fr").innerHTML = `<div class="row" style="justify-content:space-between;margin-bottom:16px"><div><h2>Products that fit you</h2><p class="mut" style="margin:4px 0 0">${esc([A.channel, A.budget && A.budget + " budget", A.category, A.audience, A.risk].filter(Boolean).join(" · "))} · ${cname(S.country)}</p></div><a class="btn w sm" href="/finder?s=0">Change answers</a></div>
     ${d.results.length ? d.results.map((r, i) => { const it = r.idea, L = r.listing; return `<article class="card fres">
       <div class="fimg">${L && L.image ? `<img src="${esc(L.image)}" alt="${esc(L.name || it.name)}" referrerpolicy="no-referrer" data-fb="noimg">` : noImg}</div>
       <div class="fbody"><div class="row" style="gap:8px"><span class="rank sm">${i + 1}</span><h3>${esc(S.lang === "bn" ? it.bn : it.name)}</h3></div>
@@ -74,9 +74,9 @@ async function finderView(){
         <p style="margin:0 0 6px"><b>Why it fits you:</b></p><ul class="dl">${r.reasons.map(x => `<li>${esc(x)}</li>`).join("")}</ul>
         <p style="margin:8px 0 0"><b>Why people buy:</b> ${esc(it.why)} ${gtag("C")}</p>
         ${L ? `<p class="mut" style="margin:6px 0 0">Example listing: ${esc(L.name)} · ${money(L.price, L.cur)} · ${esc(L.source)}</p>` : ""}
-        <div class="row" style="margin-top:12px"><a class="btn sm g" href="#/research?q=${encodeURIComponent(it.kw)}">Deep research</a><a class="btn sm w" href="#/ask?q=${encodeURIComponent("Is " + it.name + " a good product to start with in " + cname(S.country) + "?")}">Ask AI</a></div></div></article>` }).join("")
+        <div class="row" style="margin-top:12px"><a class="btn sm g" href="/research?q=${encodeURIComponent(it.kw)}">Deep research</a><a class="btn sm w" href="/ask?q=${encodeURIComponent("Is " + it.name + " a good product to start with in " + cname(S.country) + "?")}">Ask AI</a></div></div></article>` }).join("")
       : `<div class="card empty"><b>No product fits all your answers</b>Try a larger budget or "Anyone" as buyer.</div>`}
-    ${d.locked ? `<div class="card row" style="background:var(--yellow);justify-content:space-between"><b>${d.locked} more matches are in Pro.</b><a class="btn k sm" href="#/pricing">Unlock all 10</a></div>` : ""}
+    ${d.locked ? `<div class="card row" style="background:var(--yellow);justify-content:space-between"><b>${d.locked} more matches are in Pro.</b><a class="btn k sm" href="/pricing">Unlock all 10</a></div>` : ""}
     <p class="mut">Ranked by season (C, our guide) and Google Trends momentum (A) when connected. Always run Deep research before you buy stock.</p>`;
 }
 
@@ -86,7 +86,7 @@ function chatBox(el, opt){
   const ctxQ = opt.product || "";
   const hist = opt.product ? (S.wsChat = S.wsChat && S.wsChat.q === ctxQ ? S.wsChat : {q: ctxQ, m: []}).m : CHAT;
   const draw = () => {
-    el.querySelector(".msgs").innerHTML = (hist.length ? hist : [{role: "assistant", content: opt.hello}]).map(m => `<div class="msg ${m.role}">${m.role === "assistant" ? md(m.content) : esc(m.content)}${m.calls && m.calls.length ? `<div class="calls">${m.calls.map(c => `<span class="tag ${c.ok ? "g" : "r"}">${icon("check", 12)} ${esc(c.name.replace(/_/g, " "))}${c.args && c.args.product ? ": " + esc(c.args.product) : ""}</span>`).join("")}${m.calls.filter(c => c.name === "research_product" && c.args && c.args.product).slice(0, 1).map(c => `<a class="tag b" href="#/research?q=${encodeURIComponent(c.args.product)}">Open research</a>`).join("")}</div>` : ""}</div>`).join("");
+    el.querySelector(".msgs").innerHTML = (hist.length ? hist : [{role: "assistant", content: opt.hello}]).map(m => `<div class="msg ${m.role}">${m.role === "assistant" ? md(m.content) : esc(m.content)}${m.calls && m.calls.length ? `<div class="calls">${m.calls.map(c => `<span class="tag ${c.ok ? "g" : "r"}">${icon("check", 12)} ${esc(c.name.replace(/_/g, " "))}${c.args && c.args.product ? ": " + esc(c.args.product) : ""}</span>`).join("")}${m.calls.filter(c => c.name === "research_product" && c.args && c.args.product).slice(0, 1).map(c => `<a class="tag b" href="/research?q=${encodeURIComponent(c.args.product)}">Open research</a>`).join("")}</div>` : ""}</div>`).join("");
     el.querySelector(".msgs").scrollTop = 1e9;
   };
   el.innerHTML = `<div class="msgs"></div><div class="chips">${opt.suggest.map(s => `<button class="chip">${esc(s)}</button>`).join("")}</div>
@@ -120,7 +120,7 @@ function askView(r){
   chatBox($("#cb"), {hello: S.lang === "bn" ? "আসসালামু আলাইকুম! কী বিক্রি করবেন, কোন প্রোডাক্ট কেমন চলবে, লাভ কত — যেকোনো প্রশ্ন করুন।" : "Hi! Ask me what to sell, whether a product is worth it, or how much profit you can make. I check live data first.",
     suggest: S.lang === "bn" ? ["৫০ হাজার টাকায় শীতে কী বিক্রি করব?", "Moon lamp কি এখন ভালো চলবে?", "এখন কোন প্রোডাক্ট trending?"] : ["What should I sell this winter with ৳50,000?", "Is a moon lamp worth selling now?", "What is trending right now?"],
     ask: r.q.get("q") || ""});
-  if (r.q.get("q")) history.replaceState(null, "", "#/ask");
+  if (r.q.get("q")) history.replaceState(null, "", "/ask");
 }
 
 /* ---------- RESEARCH WORKSPACE (7 steps, 3 zones) ---------- */
@@ -144,11 +144,11 @@ async function researchView(r){
       <aside class="ws-ai" id="wsai"><div class="row" style="justify-content:space-between"><h3>${icon("chat", 18)} Ask AI</h3><button class="btn sm w aiclose" aria-label="Close">✕</button></div><div class="chat" id="wsc"></div></aside></div>
     <button class="btn k aifab" id="aifab">${icon("chat", 18)} Ask AI</button></section>`;
   $("#aifab").onclick = () => $("#wsai").classList.add("open"); $(".aiclose").onclick = () => $("#wsai").classList.remove("open");
-  $("#wsave").onclick = saveProject; $("#wrep").onclick = () => { location.hash = WS.pid ? "#/report?pid=" + WS.pid : "#/report?q=" + encodeURIComponent(WS.q) };
+  $("#wsave").onclick = saveProject; $("#wrep").onclick = () => { go(WS.pid ? "/report?pid=" + WS.pid : "/report?q=" + encodeURIComponent(WS.q)) };
   stepsNav();
   try { WS.d = await api(`/api/analyze?q=${encodeURIComponent(WS.q)}&country=${S.country}`); S.last = WS.d }
   catch(e){
-    $("#wsm").innerHTML = e.code === 402 ? `<div class="card empty"><b>Daily limit reached</b>${esc(e.body.message)}<br><br><a class="btn g" href="#/pricing">See plans</a></div>` : `<div class="card empty"><b>Could not check this product</b>${esc(e.message)}</div>`;
+    $("#wsm").innerHTML = e.code === 402 ? `<div class="card empty"><b>Daily limit reached</b>${esc(e.body.message)}<br><br><a class="btn g" href="/pricing">See plans</a></div>` : `<div class="card empty"><b>Could not check this product</b>${esc(e.message)}</div>`;
     return;
   }
   if (!WS.proj.tasks.length) WS.proj.tasks = WS.d.assessment.next_actions.map(x => ({text: x, done: false}));
@@ -173,7 +173,7 @@ async function saveProject(){
   if (!S.me) return auth("signup", "Create a free account to save research as a project.");
   if (WS.pid) return toast("Already saved. Changes save by themselves.");
   try { const j = await api("/api/projects", {method: "POST", body: JSON.stringify({q: WS.q, country: S.country, data: Object.assign({}, WS.proj, {step: WS.step, snapshot: snap()})})}); WS.pid = j.id;
-    $("#wsave").innerHTML = `${icon("folder", 16)} Saved`; history.replaceState(null, "", `#/research?pid=${j.id}`); persist(); toast("Saved. Your notes, quotes and tasks now save by themselves.") }
+    $("#wsave").innerHTML = `${icon("folder", 16)} Saved`; history.replaceState(null, "", `/research?pid=${j.id}`); persist(); toast("Saved. Your notes, quotes and tasks now save by themselves.") }
   catch(e){ e.code === 402 ? upgrade(e.message) : toast(e.message) }
 }
 function showStep(i){
@@ -195,7 +195,7 @@ function showStep(i){
   } else if (i === 1){
     h = `<div class="card"><h3>Is anyone looking for it?</h3>${sig("demand") ? sigRow(sig("demand")) : ""}<div class="embed" style="margin-top:12px"><iframe loading="lazy" title="Google Trends interest over time" src="${trendsURL("TIMESERIES", d.q, geo)}"></iframe></div>
       <p class="mut">Search interest is not sales. It shows curiosity; sales need a good price, trust and timing.</p></div>
-      <div class="card" style="margin-top:18px"><h3>What people search with it</h3>${d.trends && d.trends.ok && d.trends.rising.length ? d.trends.rising.slice(0, 10).map(x => `<div class="row" style="justify-content:space-between;border-top:2px dashed var(--line);padding:7px 0"><a href="#/research?q=${encodeURIComponent(x.q)}" style="font-weight:600">${esc(x.q)}</a><span class="tag ${/breakout/i.test(x.v) ? "r" : "y"}">${esc(x.v)}</span></div>`).join("") + `<p class="mut">${gtag("A")} Google Trends (SerpApi)</p>`
+      <div class="card" style="margin-top:18px"><h3>What people search with it</h3>${d.trends && d.trends.ok && d.trends.rising.length ? d.trends.rising.slice(0, 10).map(x => `<div class="row" style="justify-content:space-between;border-top:2px dashed var(--line);padding:7px 0"><a href="/research?q=${encodeURIComponent(x.q)}" style="font-weight:600">${esc(x.q)}</a><span class="tag ${/breakout/i.test(x.v) ? "r" : "y"}">${esc(x.v)}</span></div>`).join("") + `<p class="mut">${gtag("A")} Google Trends (SerpApi)</p>`
         : `<div class="embed" style="margin-top:12px"><iframe loading="lazy" title="Google Trends related queries" src="${trendsURL("RELATED_QUERIES", d.q, geo)}"></iframe></div>`}</div>`;
   } else if (i === 2){
     const pk = idea ? peaks(idea, geo) : [], m = new Date().getMonth();
@@ -269,12 +269,12 @@ function reviewsHTML(R){
 }
 
 /* ---------- PROJECTS ---------- */
-const projCard = p => `<a class="card proj" href="#/research?pid=${p.id}"><div class="row" style="justify-content:space-between"><h3>${esc(p.name)}</h3>${p.verdict ? `<span class="tag" style="background:${VCOL[p.verdict] || "var(--cell)"}">${esc(p.verdict)}</span>` : ""}</div>
+const projCard = p => `<a class="card proj" href="/research?pid=${p.id}"><div class="row" style="justify-content:space-between"><h3>${esc(p.name)}</h3>${p.verdict ? `<span class="tag" style="background:${VCOL[p.verdict] || "var(--cell)"}">${esc(p.verdict)}</span>` : ""}</div>
   <p class="mut" style="margin:6px 0">${cname(p.country)} · step ${(p.step || 0) + 1} of 7 · ${p.tasks ? `${p.tasks_done}/${p.tasks} tasks done` : "no tasks yet"}</p><span class="mut">Updated ${ago(p.updated)}</span></a>`;
 async function projectsView(){
   if (!S.me){ $("#app").innerHTML = `<section class="sec"><div class="wrap"><div class="card empty"><div>${icon("folder", 44)}</div><h3>Projects keep your research</h3><p class="mut">Save a product, add competitors, supplier quotes and tasks, and come back any time.</p><button class="btn g" id="sl">Create free account</button></div></div></section>`; $("#sl").onclick = () => auth("signup"); return }
   let ps = []; try { ps = await api("/api/projects") } catch(e){}
-  $("#app").innerHTML = `<section class="sec" style="padding-top:28px"><div class="wrap"><div class="row" style="justify-content:space-between"><h2>${t("projects")}</h2><div class="row"><a class="btn sm w" href="#/saved">Shortlist board</a><a class="btn sm g" href="#/research">${icon("plus", 16)} New research</a></div></div>
+  $("#app").innerHTML = `<section class="sec" style="padding-top:28px"><div class="wrap"><div class="row" style="justify-content:space-between"><h2>${t("projects")}</h2><div class="row"><a class="btn sm w" href="/saved">Shortlist board</a><a class="btn sm g" href="/research">${icon("plus", 16)} New research</a></div></div>
     <div class="grid g3" style="margin-top:18px">${ps.map(projCard).join("") || `<div class="card empty" style="grid-column:1/-1"><b>No projects yet</b>Run a Deep research and press “Save as project”.</div>`}</div></div></section>`;
 }
 
@@ -286,7 +286,7 @@ async function reportView(r){
   let d; try { d = WS.d && WS.d.q === q ? WS.d : await api(`/api/analyze?q=${encodeURIComponent(q)}&country=${S.country}`) } catch(e){ $("#app").innerHTML = `<section class="sec"><div class="wrap"><div class="card empty">${esc(e.message)}</div></div></section>`; return }
   const A = d.assessment, P = (p && p.data) || WS.proj || {}, mp = d.market_price, sp = d.supplier_price, now = new Date().toLocaleString("en-GB");
   const sec = (n, title, body) => `<section class="rsec"><h2><span>${n}</span> ${title}</h2>${body}</section>`;
-  $("#app").innerHTML = `<div class="wrap report"><div class="row noprint" style="justify-content:space-between;margin:20px 0"><a class="btn w sm" href="#/research?${pid ? "pid=" + pid : "q=" + encodeURIComponent(q)}">← Back to research</a><button class="btn k" data-act="print">${icon("printer", 16)} Print or save as PDF</button></div>
+  $("#app").innerHTML = `<div class="wrap report"><div class="row noprint" style="justify-content:space-between;margin:20px 0"><a class="btn w sm" href="/research?${pid ? "pid=" + pid : "q=" + encodeURIComponent(q)}">← Back to research</a><button class="btn k" data-act="print">${icon("printer", 16)} Print or save as PDF</button></div>
     <div class="card rep"><div class="mut">Product Radar research report · ${now}</div><h1 style="font-size:40px;margin:6px 0">${esc(q)}</h1><p class="mut">${cname(d.country)} · prices in source currency and ${esc(S.cur)}</p>
     ${sec(1, "Opportunity summary", `<p><b style="font-size:22px">${esc(A.verdict)}</b> · Opportunity ${A.opportunity == null ? "–" : A.opportunity}/100 · Evidence confidence ${A.confidence_label} (${A.confidence}%)${P.decision ? ` · Your decision: <b>${esc(P.decision)}</b>` : ""}</p><p>${esc(A.verdict_why)}</p>${A.idea ? `<p><b>Target buyer and why:</b> ${esc(A.idea.why)} ${gtag("C")}</p>` : ""}`)}
     ${sec(2, "Demand and timing", `<table class="bt">${A.signals.map(s => `<tr><td><b>${esc(s.name)}</b></td><td>${s.score == null ? "–" : s.score}</td><td>${gtag(s.grade)}</td><td style="white-space:normal">${esc(s.note)}</td></tr>`).join("")}</table>`)}
@@ -307,12 +307,12 @@ VIEWS.home = async function(r){
   homeBase(r);
   const hero = $(".hero .season-card");
   if (hero) hero.outerHTML = `<div class="acts">${[["finder", "compass", "a1", "a1d", "var(--yellow)"], ["research", "flask", "a2", "a2d", "var(--mint)"], ["research?step=3", "users", "a3", "a3d", "rgba(143,123,255,.2)"], ["ask", "chat", "a4", "a4d", "var(--pink)"]]
-    .map(a => `<a class="card act" href="#/${a[0]}"><span class="ic" style="background:${a[4]}">${icon(a[1], 24)}</span><b>${t(a[2])}</b><span class="mut">${t(a[3])}</span></a>`).join("")}</div>`;
+    .map(a => `<a class="card act" href="/${a[0]}"><span class="ic" style="background:${a[4]}">${icon(a[1], 24)}</span><b>${t(a[2])}</b><span class="mut">${t(a[3])}</span></a>`).join("")}</div>`;
   const h1 = $(".hero h1"); if (h1 && S.me) h1.innerHTML = `${t("achieve")}`;
   if (S.me){ try { const ps = await api("/api/projects"); if (ps.length && $(".hero")) $(".hero").insertAdjacentHTML("afterend", `<section class="sec" style="padding:10px 0 30px"><div class="wrap"><h3 style="margin-bottom:12px">${t("cont")}</h3><div class="grid g3">${ps.slice(0, 3).map(projCard).join("")}</div></div></section>`) } catch(e){} }
 };
 /* research box on Analyze competitors: open step 4 directly */
 const bindSearchBase = bindSearch;
-bindSearch = function(){ const f = $("#sf"); if (!f) return; f.onsubmit = e => { e.preventDefault(); const q = $("#sq").value.trim(); S.country = $("#sc").value; ls.set("country", S.country); if (q) location.hash = "#/research?q=" + encodeURIComponent(q) + (route().q.get("step") ? "&step=" + route().q.get("step") : "") } };
+bindSearch = function(){ const f = $("#sf"); if (!f) return; f.onsubmit = e => { e.preventDefault(); const q = $("#sq").value.trim(); S.country = $("#sc").value; ls.set("country", S.country); if (q) go("/research?q=" + encodeURIComponent(q) + (route().q.get("step") ? "&step=" + route().q.get("step") : "")) } };
 
 Object.assign(VIEWS, {finder: finderView, research: researchView, analyze: researchView, ask: askView, projects: projectsView, report: reportView});

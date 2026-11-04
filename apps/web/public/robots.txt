@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /adminlogin
+Disallow: /apikeys
+Disallow: /dashboard
+Disallow: /projects
+Disallow: /saved
+Disallow: /report

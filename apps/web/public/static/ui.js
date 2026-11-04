@@ -23,7 +23,7 @@ VIEWS.home = async r => {
   if (!left) return;
   hero.classList.add("hero-c");
   const pics = S.ideas.filter(i => i.photo && i.photo.image).slice(0, 5), pk = pics.length ? pics : S.ideas.slice(0, 5);
-  const card = (i, cls) => `<a class="fl ${cls}" href="#/research?q=${encodeURIComponent(i.kw)}"><span class="fl-ph">${photo(i.photo, i.name)}</span><span><b>${esc(S.lang === "bn" ? i.bn : i.name)}</b><span class="tag ${seasonState(i) === "now" ? "g" : seasonState(i) === "soon" ? "y" : ""}">${seasonState(i) === "now" ? "In season" : seasonState(i) === "soon" ? "Season soon" : "Off season"}</span></span></a>`;
+  const card = (i, cls) => `<a class="fl ${cls}" href="/research?q=${encodeURIComponent(i.kw)}"><span class="fl-ph">${photo(i.photo, i.name)}</span><span><b>${esc(S.lang === "bn" ? i.bn : i.name)}</b><span class="tag ${seasonState(i) === "now" ? "g" : seasonState(i) === "soon" ? "y" : ""}">${seasonState(i) === "now" ? "In season" : seasonState(i) === "soon" ? "Season soon" : "Off season"}</span></span></a>`;
   const wave = (d) => `<svg class="wave ${d}" viewBox="0 0 220 60" aria-hidden="true"><path d="M0 30 C 20 30, 25 8, 45 8 S 70 52, 90 52 S 115 12, 135 12 S 160 44, 180 40 S 205 30, 220 30" fill="none" stroke="url(#wg${d})" stroke-width="2.4" stroke-linecap="round"/><defs><linearGradient id="wg${d}" x1="0" x2="1"><stop offset="0" stop-color="#0B8A7A" stop-opacity="${d === "l" ? .15 : 1}"/><stop offset="1" stop-color="#0B8A7A" stop-opacity="${d === "l" ? 1 : .15}"/></linearGradient></defs></svg>`;
   const stage = `<div class="stage" aria-label="Products the radar is watching">
       <div class="fl-col l">${pk.slice(0, 3).map((i, k) => card(i, "f" + k)).join("")}</div>${wave("l")}
@@ -65,9 +65,9 @@ async function fCount(A){
 }
 function fSide(A, step){
   return `<aside class="card fside"><h3>Your answers</h3><div class="fans">${FQ2.map((q, i) => { const v = A[q.k], has = Array.isArray(v) ? v.length : (v !== undefined && v !== "");
-      return `<a href="#/finder?s=${i}" class="${i === step ? "on" : ""}"><span class="n ${has ? "done" : ""}">${has ? icon("check", 12) : i + 1}</span><span><small>${esc(q.q)}</small><b>${has ? esc((Array.isArray(v) ? v : [v]).map(x => fLabel(q, x)).join(", ")) : "Not answered"}</b></span></a>` }).join("")}</div>
+      return `<a href="/finder?s=${i}" class="${i === step ? "on" : ""}"><span class="n ${has ? "done" : ""}">${has ? icon("check", 12) : i + 1}</span><span><small>${esc(q.q)}</small><b>${has ? esc((Array.isArray(v) ? v : [v]).map(x => fLabel(q, x)).join(", ")) : "Not answered"}</b></span></a>` }).join("")}</div>
     <div class="fmatch"><b id="fcount">…</b><span>products match so far</span></div>
-    <a class="btn g" style="width:100%" href="#/finder?s=${FQ2.length}">See my products</a>
+    <a class="btn g" style="width:100%" href="/finder?s=${FQ2.length}">See my products</a>
     <button class="btn w sm" id="freset" style="width:100%;margin-top:8px">Start over</button></aside>`;
 }
 async function finderView2(){
@@ -78,27 +78,27 @@ async function finderView2(){
     $("#app").innerHTML = `<section class="sec fsec"><div class="wrap">${discoverTabs("finder")}
       <div class="fhead"><h1>Find products that fit you</h1><p class="mut">Answer a few questions. We rank products by season, live search demand and your budget.</p></div>
       <div class="fx"><div class="card finder2">
-        <div class="fsteps">${FQ2.map((_, i) => `<a href="#/finder?s=${i}" class="${i < step ? "done" : i === step ? "on" : ""}" aria-label="Question ${i + 1}"></a>`).join("")}</div>
+        <div class="fsteps">${FQ2.map((_, i) => `<a href="/finder?s=${i}" class="${i < step ? "done" : i === step ? "on" : ""}" aria-label="Question ${i + 1}"></a>`).join("")}</div>
         <div class="mut" style="margin-top:14px">Question ${step + 1} of ${FQ2.length}</div>
         <h2>${esc(q.q)}</h2><p class="mut" style="margin:6px 0 20px">${esc(q.hint)}</p>
         <div class="opts2 ${opts.length > 6 ? "many" : ""}">${opts.map(o => `<button class="opt2 ${isOn(o[0]) ? "on" : ""}" data-v="${esc(o[0])}" aria-pressed="${isOn(o[0])}">
           <span class="oi">${q.cats ? catIcon(o[0])[0] : icon(o[2] || "box", 20)}</span><span class="ot"><b>${esc(o[1])}</b>${o[3] ? `<small>${esc(o[3])}</small>` : ""}</span>${q.multi ? `<span class="ck">${icon("check", 14)}</span>` : ""}</button>`).join("")}</div>
-        <div class="row fnav">${step ? `<a class="btn w" href="#/finder?s=${step - 1}">Back</a>` : "<span></span>"}
-          <div class="row"><a class="skip" href="#/finder?s=${step + 1}">Skip</a>${q.multi ? `<a class="btn g" href="#/finder?s=${step + 1}">Continue</a>` : ""}</div></div>
+        <div class="row fnav">${step ? `<a class="btn w" href="/finder?s=${step - 1}">Back</a>` : "<span></span>"}
+          <div class="row"><a class="skip" href="/finder?s=${step + 1}">Skip</a>${q.multi ? `<a class="btn g" href="/finder?s=${step + 1}">Continue</a>` : ""}</div></div>
       </div>${fSide(A, step)}</div></div></section>`;
     $$(".opt2").forEach(b => b.onclick = () => {
       const v = b.dataset.v;
       if (q.multi){ const s = new Set(A[q.k] || []); s.has(v) ? s.delete(v) : s.add(v); A[q.k] = [...s]; ls.set("finder2", A); b.classList.toggle("on"); b.setAttribute("aria-pressed", s.has(v)); $(".fside").outerHTML = fSide(A, step); bindSide(); fCount(A) }
-      else { A[q.k] = v; ls.set("finder2", A); location.hash = "#/finder?s=" + (step + 1) }
+      else { A[q.k] = v; ls.set("finder2", A); go("/finder?s=" + (step + 1)) }
     });
-    const bindSide = () => { const r = $("#freset"); if (r) r.onclick = () => { ls.set("finder2", {}); location.hash = "#/finder?s=0" } };
+    const bindSide = () => { const r = $("#freset"); if (r) r.onclick = () => { ls.set("finder2", {}); go("/finder?s=0") } };
     bindSide(); fCount(A);
     return;
   }
   $("#app").innerHTML = `<section class="sec fsec"><div class="wrap">${discoverTabs("finder")}<div id="fr"><div class="card"><div class="skel"></div><div class="skel" style="width:60%"></div></div></div></div></section>`;
   let d; try { d = await api("/api/finder", {method: "POST", body: JSON.stringify(Object.assign({country: S.country}, A))}) } catch(e){ $("#fr").innerHTML = `<div class="card empty">${esc(e.message)}</div>`; return }
   const chips = FQ2.map(q => A[q.k] && (Array.isArray(A[q.k]) ? A[q.k].length : true) ? (Array.isArray(A[q.k]) ? A[q.k] : [A[q.k]]).map(x => fLabel(q, x)).join(", ") : null).filter(Boolean);
-  $("#fr").innerHTML = `<div class="fhead row" style="justify-content:space-between;align-items:end"><div><h1>Products that fit you</h1><p class="mut">${d.matches} matches in ${esc(cname(S.country))}. Showing the best ${d.results.length}.</p><div class="chips" style="margin-top:10px">${chips.map(c => `<span class="chip">${esc(c)}</span>`).join("")}</div></div><a class="btn w" href="#/finder?s=0">Change answers</a></div>
+  $("#fr").innerHTML = `<div class="fhead row" style="justify-content:space-between;align-items:end"><div><h1>Products that fit you</h1><p class="mut">${d.matches} matches in ${esc(cname(S.country))}. Showing the best ${d.results.length}.</p><div class="chips" style="margin-top:10px">${chips.map(c => `<span class="chip">${esc(c)}</span>`).join("")}</div></div><a class="btn w" href="/finder?s=0">Change answers</a></div>
     ${d.results.length ? `<div class="fgrid">${d.results.map((r, i) => { const it = r.idea, L = r.listing; return `<article class="card fcard">
       <div class="fc-ph">${L && L.image ? `<img src="${esc(L.image)}" alt="${esc(L.name || it.name)}" referrerpolicy="no-referrer" data-fb="noimg">` : noImg}<span class="rank sm">${i + 1}</span></div>
       <div class="fc-b"><h3>${esc(S.lang === "bn" ? it.bn : it.name)}</h3>
@@ -106,9 +106,9 @@ async function finderView2(){
         <ul class="why2">${r.reasons.map(x => `<li>${icon("check", 14)}<span>${esc(x)}</span></li>`).join("")}</ul>
         <p class="mut" style="margin:8px 0 0"><b style="color:var(--text)">Why people buy:</b> ${esc(it.why)}</p>
         ${L ? `<p class="mut" style="margin:6px 0 0">From ${money(L.price, L.cur)} on ${esc(L.source)}</p>` : ""}
-        <div class="row" style="margin-top:14px"><a class="btn sm g" href="#/research?q=${encodeURIComponent(it.kw)}">Deep research</a><a class="btn sm w" href="#/ask?q=${encodeURIComponent("Is " + it.name + " a good product to start with in " + cname(S.country) + "?")}">Ask AI</a></div></div></article>` }).join("")}</div>`
+        <div class="row" style="margin-top:14px"><a class="btn sm g" href="/research?q=${encodeURIComponent(it.kw)}">Deep research</a><a class="btn sm w" href="/ask?q=${encodeURIComponent("Is " + it.name + " a good product to start with in " + cname(S.country) + "?")}">Ask AI</a></div></div></article>` }).join("")}</div>`
       : `<div class="card empty"><b>No product fits all your answers</b>Try a bigger budget, fewer categories or “Skip” on buyers.</div>`}
-    ${d.locked ? `<div class="card row upsell" style="justify-content:space-between;margin-top:18px"><b>${d.locked} more matches are in Pro.</b><a class="btn g sm" href="#/pricing">Unlock all 10</a></div>` : ""}
+    ${d.locked ? `<div class="card row upsell" style="justify-content:space-between;margin-top:18px"><b>${d.locked} more matches are in Pro.</b><a class="btn g sm" href="/pricing">Unlock all 10</a></div>` : ""}
     <p class="mut" style="margin-top:16px">Ranked by season (our guide), Google Trends momentum when connected, and your answers. Always run Deep research before you buy stock.</p>`;
 }
 VIEWS.finder = finderView2;
@@ -192,7 +192,7 @@ VIEWS.trending = async r => {
   const first = $("#tv > .row"); if (!kws.length || !first) return;
   if (!$("#tv .card svg")) first.insertAdjacentHTML("afterend", `<div class="card" style="margin-bottom:22px"><div class="row" style="justify-content:space-between"><h3>Google searches, last 12 months</h3><span class="tag">Live from Google Trends</span></div>
     <div class="embed" style="margin-top:12px;height:400px"><iframe loading="lazy" title="Google Trends comparison" src="${trendsMulti(kws, r.q.get("c") || S.country)}"></iframe></div>
-    <p class="mut" style="margin:8px 0 0">Comparing the top ${kws.length} products. Add SERPAPI_KEY to rank all products by live demand. <a href="#/setup">Setup guide</a></p></div>`);
+    <p class="mut" style="margin:8px 0 0">Comparing the top ${kws.length} products. Add SERPAPI_KEY to rank all products by live demand. <a href="/setup">Setup guide</a></p></div>`);
 };
 
 /* ---------- SETUP page: which data sources are on, and what each one unlocks ---------- */
@@ -241,7 +241,7 @@ VIEWS.home = async r => {
         <h3>${esc(S.lang === "bn" ? i.bn : i.name)}</h3><span class="mut">${esc(i.cat)}</span></div></div>
       <p class="pk-why">${esc(i.why)}</p>
       <div class="pk-m">${MS.map((x, k2) => `<span class="${pk.includes(k2 + 1) ? "on" : ""} ${k2 === m ? "now" : ""}"><i></i>${x[0]}</span>`).join("")}</div>
-      <div class="row pk-f">${i.photo && i.photo.price ? `<div><small class="mut">From</small><b>${money(i.photo.price, i.photo.cur)}</b></div>` : "<span></span>"}<a class="btn g sm" href="#/research?q=${encodeURIComponent(i.kw)}">Check this product</a></div>`;
+      <div class="row pk-f">${i.photo && i.photo.price ? `<div><small class="mut">From</small><b>${money(i.photo.price, i.photo.cur)}</b></div>` : "<span></span>"}<a class="btn g sm" href="/research?q=${encodeURIComponent(i.kw)}">Check this product</a></div>`;
   };
   $$(".blip").forEach(b => { b.onmouseenter = () => { clearInterval(radarT); show(+b.dataset.k) }; b.onclick = () => { clearInterval(radarT); show(+b.dataset.k) } });
   show(0); clearInterval(radarT);
@@ -256,34 +256,34 @@ render = function(){ renderBase(); document.body.classList.toggle("auth-page", r
 
 /* ---------- LOGIN / SIGN UP: full page, split screen ---------- */
 auth = function(mode, why){
-  try { sessionStorage.setItem("authWhy", why || ""); if (route().name !== "login") sessionStorage.setItem("authNext", location.hash || "#/") } catch(e){}
-  location.hash = "#/login?m=" + (mode === "signup" ? "signup" : "login");
+  try { sessionStorage.setItem("authWhy", why || ""); if (route().name !== "login") sessionStorage.setItem("authNext", (location.pathname + location.search) || "/") } catch(e){}
+  go("/login?m=" + (mode === "signup" ? "signup" : "login"));
 };
 function loginView(r){
   const sign = r.q.get("m") === "signup";
-  let why = "", next = "#/dashboard"; try { why = sessionStorage.getItem("authWhy") || ""; next = sessionStorage.getItem("authNext") || "#/dashboard" } catch(e){}
-  if (S.me){ location.hash = "#/dashboard"; return }
+  let why = "", next = "/dashboard"; try { why = sessionStorage.getItem("authWhy") || ""; next = sessionStorage.getItem("authNext") || "/dashboard" } catch(e){}
+  if (S.me){ go("/dashboard"); return }
   const pick = (S.ideas.find(i => i.photo && i.photo.image) || S.ideas[0] || {name: "Moon lamp", why: "", kw: "moon lamp"});
   $("#app").innerHTML = `<section class="auth">
     <div class="auth-l">${doodles([["star", "84%", "14%", 26, "c2", 0, 1], ["chart", "80%", "54%", 54, "c3", 0, 2], ["tag", "70%", "30%", 36, "c1", 12, 1]])}<span class="glow-b"></span>
-      <a class="logo light" href="#/"><i>${document.querySelector(".logo i").innerHTML}</i><span>Product Radar</span></a>
+      <a class="logo light" href="/"><i>${document.querySelector(".logo i").innerHTML}</i><span>Product Radar</span></a>
       <div class="auth-copy"><h1>Know what sells <span>before you buy stock.</span></h1><p>Live demand, real marketplace prices, supplier cost and season in one place. Free to start.</p></div>
       <div class="auth-demo"><div class="ad-top"><span class="pk-ph">${photo(pick.photo, pick.name)}</span><div><b>${esc(pick.name)}</b><span>Research · ${esc(cname(S.country))}</span></div><span class="ad-v">Go</span></div>
         <div class="ad-row"><div><small>Opportunity</small><b>83</b></div><div><small>Evidence</small><b>High</b></div><div><small>Season</small><b>${seasonState(pick) === "now" ? "Now" : "Soon"}</b></div></div>
         <svg viewBox="0 0 300 70" class="ad-ch" aria-hidden="true"><defs><linearGradient id="adg" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#5BE3CB" stop-opacity=".45"/><stop offset="1" stop-color="#5BE3CB" stop-opacity="0"/></linearGradient></defs><path d="M0 58 L25 52 L50 55 L75 44 L100 47 L125 36 L150 39 L175 26 L200 30 L225 18 L250 21 L275 10 L300 8 L300 70 L0 70Z" fill="url(#adg)"/><polyline points="0,58 25,52 50,55 75,44 100,47 125,36 150,39 175,26 200,30 225,18 250,21 275,10 300,8" fill="none" stroke="#5BE3CB" stroke-width="2.5"/></svg>
         <small class="ad-s">Example research card. Every number in the app shows its source.</small></div>
     </div>
-    <div class="auth-r"><a class="back" href="${esc(next.includes("login") ? "#/" : next)}">${icon("arrow", 14)} Back</a>
+    <div class="auth-r"><a class="back" href="${esc(next.includes("login") ? "/" : next)}">${icon("arrow", 14)} Back</a>
       <form class="auth-f" id="af" novalidate>
         <h2>${sign ? "Create your account" : "Welcome back"}<span class="dot">.</span></h2>
         <p class="mut">${esc(why || (sign ? "Free plan: 5 product checks a day, saved projects and AI answers." : "Log in to your account."))}</p>
-        <div class="seg"><a class="${sign ? "" : "on"}" href="#/login?m=login">Log in</a><a class="${sign ? "on" : ""}" href="#/login?m=signup">Sign up</a></div>
+        <div class="seg"><a class="${sign ? "" : "on"}" href="/login?m=login">Log in</a><a class="${sign ? "on" : ""}" href="/login?m=signup">Sign up</a></div>
         ${sign ? `<label class="field">Your name<input name="name" autocomplete="name" placeholder="Tareen"></label>` : ""}
         <label class="field">Email<input name="email" type="email" required autocomplete="email" placeholder="you@example.com"></label>
         <label class="field">Password<span class="pw"><input name="password" type="password" required minlength="8" autocomplete="${sign ? "new-password" : "current-password"}" placeholder="${sign ? "At least 8 characters" : "Enter your password"}"><button type="button" id="pwt" aria-label="Show password">Show</button></span></label>
         <p class="err hide" id="ae" role="alert"></p>
         <button class="btn g big" type="submit">${sign ? "Create free account" : "Log in"}</button>
-        <p class="mut sw">${sign ? "Already have an account?" : "Don't have an account?"} <a href="#/login?m=${sign ? "login" : "signup"}">${sign ? "Log in" : "Sign up free"}</a></p>
+        <p class="mut sw">${sign ? "Already have an account?" : "Don't have an account?"} <a href="/login?m=${sign ? "login" : "signup"}">${sign ? "Log in" : "Sign up free"}</a></p>
         ${sign ? `<p class="mut fine">No card needed. You can delete your account any time.</p>` : ""}
       </form></div></section>`;
   $("#pwt").onclick = () => { const i = $("#af input[name=password]"), s = i.type === "password"; i.type = s ? "text" : "password"; $("#pwt").textContent = s ? "Hide" : "Show" };
@@ -294,7 +294,7 @@ function loginView(r){
     btn.disabled = true; btn.textContent = sign ? "Creating your account…" : "Logging in…";
     try { await api(sign ? "/api/signup" : "/api/login", {method: "POST", body: JSON.stringify(f)}); await loadMe(); await loadIdeas();
       try { sessionStorage.removeItem("authWhy"); sessionStorage.removeItem("authNext") } catch(x){}
-      location.hash = sign ? "#/dashboard" : (next && !next.includes("login") && next !== "#/" ? next : "#/dashboard");
+      go(sign ? "/dashboard" : (next && !next.includes("login") && next !== "/" ? next : "/dashboard"));
       toastBase(sign ? "Account created. You now get 5 checks a day." : "Logged in.") }
     catch(x){ err.textContent = x.message; err.classList.remove("hide"); btn.disabled = false; btn.textContent = sign ? "Create free account" : "Log in" }
   };
@@ -359,13 +359,13 @@ VIEWS.research = async r => {
         <h1>Check any product <span class="hl">in 7 steps</span></h1>
         <p class="lead">Live demand, timing, competitors, customer voice and your real profit. Then a clear Go, Test small or Skip.</p>
         ${searchBox("", true)}
-        <div class="row try"><span class="mut"><b>Popular:</b></span>${pop.slice(0, 5).map(i => `<a class="chip" href="#/research?q=${encodeURIComponent(i.kw)}">${esc(i.kw)}</a>`).join("")}</div></div></div></section>
-    ${recent.length ? `<section class="sec" style="padding:20px 0 40px"><div class="wrap"><div class="row" style="justify-content:space-between;margin-bottom:14px"><h2 style="font-size:24px">${t("cont")}</h2><a class="btn w sm" href="#/projects">All projects</a></div><div class="grid g3">${recent.slice(0, 3).map(projCard).join("")}</div></div></section>` : ""}
+        <div class="row try"><span class="mut"><b>Popular:</b></span>${pop.slice(0, 5).map(i => `<a class="chip" href="/research?q=${encodeURIComponent(i.kw)}">${esc(i.kw)}</a>`).join("")}</div></div></div></section>
+    ${recent.length ? `<section class="sec" style="padding:20px 0 40px"><div class="wrap"><div class="row" style="justify-content:space-between;margin-bottom:14px"><h2 style="font-size:24px">${t("cont")}</h2><a class="btn w sm" href="/projects">All projects</a></div><div class="grid g3">${recent.slice(0, 3).map(projCard).join("")}</div></div></section>` : ""}
     <section class="sec band" style="padding:72px 0"><div class="wrap"><div class="sec-h"><h2>What the research covers</h2><p>Every number shows where it comes from: observed, calculated, estimated or an AI idea.</p></div>
       <div class="s7">${STEPS7.map((x, i) => `<div class="card s7c"><span class="s7n">${i + 1}</span><span class="ic">${icon(x[0], 20)}</span><b>${x[1]}</b><span class="mut">${x[2]}</span></div>`).join("")}
-        <div class="card s7c s7cta"><b>Try it now</b><span>2 free checks a day, no sign-up.</span><a class="btn g sm" href="#/research?q=${encodeURIComponent(pop[0] ? pop[0].kw : "moon lamp")}">Run a sample</a></div></div></div></section>
-    <section class="sec" style="padding:72px 0"><div class="wrap"><div class="row" style="justify-content:space-between;margin-bottom:18px"><div class="sec-h" style="margin:0"><h2>Start with a product people want now</h2><p>In season or coming soon in ${esc(cname(S.country))}. Tap one to research it.</p></div><a class="btn w sm" href="#/ideas">All ideas</a></div>
-      <div class="soon">${pop.map(i => { const st = seasonState(i); return `<a class="card sn" href="#/research?q=${encodeURIComponent(i.kw)}"><span class="ph">${photo(i.photo, i.name)}<span class="tag ${st === "now" ? "g" : st === "soon" ? "y" : ""}">${st === "now" ? "In season" : st === "soon" ? "Soon" : "Off season"}</span></span><b>${esc(S.lang === "bn" ? i.bn : i.name)}</b><span class="mut">${esc(i.why)}</span>${i.photo && i.photo.price ? `<span class="pr">from ${money(i.photo.price, i.photo.cur)}</span>` : ""}</a>` }).join("")}</div></div></section>`;
+        <div class="card s7c s7cta"><b>Try it now</b><span>2 free checks a day, no sign-up.</span><a class="btn g sm" href="/research?q=${encodeURIComponent(pop[0] ? pop[0].kw : "moon lamp")}">Run a sample</a></div></div></div></section>
+    <section class="sec" style="padding:72px 0"><div class="wrap"><div class="row" style="justify-content:space-between;margin-bottom:18px"><div class="sec-h" style="margin:0"><h2>Start with a product people want now</h2><p>In season or coming soon in ${esc(cname(S.country))}. Tap one to research it.</p></div><a class="btn w sm" href="/ideas">All ideas</a></div>
+      <div class="soon">${pop.map(i => { const st = seasonState(i); return `<a class="card sn" href="/research?q=${encodeURIComponent(i.kw)}"><span class="ph">${photo(i.photo, i.name)}<span class="tag ${st === "now" ? "g" : st === "soon" ? "y" : ""}">${st === "now" ? "In season" : st === "soon" ? "Soon" : "Off season"}</span></span><b>${esc(S.lang === "bn" ? i.bn : i.name)}</b><span class="mut">${esc(i.why)}</span>${i.photo && i.photo.price ? `<span class="pr">from ${money(i.photo.price, i.photo.cur)}</span>` : ""}</a>` }).join("")}</div></div></section>`;
   bindSearch();
 };
 VIEWS.analyze = VIEWS.research;
@@ -382,7 +382,7 @@ VIEWS.projects = async r => {
       <div class="wrap"><div><span class="tag">${icon("folder", 14)} Projects</span>
         <h1>Keep every product idea <span class="hl">in one place</span></h1>
         <p class="lead">Save a research, add competitors, supplier quotes, notes and tasks. Your project saves by itself, so you can come back any time.</p>
-        <div class="row" style="justify-content:center">${S.me ? `<a class="btn g big" href="#/research">${icon("flask", 18)} Start your first research</a>` : `<button class="btn g big" id="pj-su">Create free account</button><a class="btn w big" href="#/research">Try a research first</a>`}</div>
+        <div class="row" style="justify-content:center">${S.me ? `<a class="btn g big" href="/research">${icon("flask", 18)} Start your first research</a>` : `<button class="btn g big" id="pj-su">Create free account</button><a class="btn w big" href="/research">Try a research first</a>`}</div>
         ${S.me ? "" : `<p class="mut" style="margin-top:12px">${icon("check", 14)} Free plan saves 3 projects. No card needed.</p>`}</div></div></section>
     <section class="sec band" style="padding:72px 0"><div class="wrap"><div class="sec-h"><h2>What a project looks like</h2><p>An example. Yours fills in from your own research.</p></div>
       <div class="pj-demo">
@@ -431,7 +431,7 @@ function askView2(r){
     $$("#cxl .cx-item").forEach(el => el.onclick = e => { if (e.target.closest("[data-del]")) return; CH.cur = el.dataset.id; $("#cxs").classList.remove("open"); draw(); list() });
     $$("#cxl [data-del]").forEach(b => b.onclick = () => { chats = chats.filter(c => c.id !== b.dataset.del); CH.save(chats); if (CH.cur === b.dataset.del) CH.cur = null; draw(); list() });
   };
-  const calls = m => m.calls && m.calls.length ? `<div class="cx-tools">${m.calls.map(c => `<span>${icon("check", 12)} ${esc(c.name.replace(/_/g, " "))}${c.args && c.args.product ? ": " + esc(c.args.product) : ""}</span>`).join("")}${m.calls.filter(c => c.name === "research_product" && c.args && c.args.product).slice(0, 1).map(c => `<a href="#/research?q=${encodeURIComponent(c.args.product)}">${L ? "রিসার্চ খুলুন" : "Open research"} →</a>`).join("")}</div>` : "";
+  const calls = m => m.calls && m.calls.length ? `<div class="cx-tools">${m.calls.map(c => `<span>${icon("check", 12)} ${esc(c.name.replace(/_/g, " "))}${c.args && c.args.product ? ": " + esc(c.args.product) : ""}</span>`).join("")}${m.calls.filter(c => c.name === "research_product" && c.args && c.args.product).slice(0, 1).map(c => `<a href="/research?q=${encodeURIComponent(c.args.product)}">${L ? "রিসার্চ খুলুন" : "Open research"} →</a>`).join("")}</div>` : "";
   const draw = (typing) => {
     const c = conv(); $("#cxt").textContent = c ? chatTitle(c.title) : (L ? "AI-কে জিজ্ঞেস" : "Ask AI");
     if (!c || !c.m.length){
@@ -468,7 +468,7 @@ function askView2(r){
   $("#cxb").onclick = () => $("#cxs").classList.toggle("open");
   const li = $("#cxl-in"); if (li) li.onclick = e => { e.preventDefault(); auth("login") };
   list(); draw();
-  const q = r.q.get("q"); if (q){ history.replaceState(null, "", "#/ask"); send(q) }
+  const q = r.q.get("q"); if (q){ history.replaceState(null, "", "/ask"); send(q) }
 }
 VIEWS.ask = askView2;
 Object.assign(IP, {copy: '<rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h8"/>'});
@@ -507,7 +507,7 @@ function pricing2(){
         ${row("Shortlist", "saved")}${row("Product Finder results", "finder")}${row("Review videos", "videos", yes)}
         <tr><td>Season calendar</td><td>Partly</td><td>${yes(1)}</td><td>${yes(1)}</td></tr><tr><td>Printable reports</td><td>${yes(1)}</td><td>${yes(1)}</td><td>${yes(1)}</td></tr>
         <tr><td>Priority support</td><td>${yes(0)}</td><td>${yes(0)}</td><td>${yes(1)}</td></tr></tbody></table></div></div></section>` : ""}
-    <section class="sec" style="padding:72px 0"><div class="wrap"><div class="faq2"><div><h2>Questions before you start</h2><p class="mut" style="font-size:16px;margin-top:10px">Still unsure? Start free, it takes a minute and needs no card.</p><a class="btn g" style="margin-top:18px" href="#/login?m=signup">Create free account</a></div>
+    <section class="sec" style="padding:72px 0"><div class="wrap"><div class="faq2"><div><h2>Questions before you start</h2><p class="mut" style="font-size:16px;margin-top:10px">Still unsure? Start free, it takes a minute and needs no card.</p><a class="btn g" style="margin-top:18px" href="/login?m=signup">Create free account</a></div>
       <div class="faq">${FAQ.map(f => `<details><summary>${esc(f[0])}</summary><p>${esc(f[1])}</p></details>`).join("")}</div></div></div></section>`;
   bindPlans();
   $$("[data-cur]").forEach(b => b.onclick = () => { S.cur = b.dataset.cur; ls.set("cur", S.cur); pricing2(); head() });
@@ -518,10 +518,10 @@ VIEWS.pricing = pricing2;
 function shellNav(active){
   const L = [["dashboard", "grid", t("dash")], ["research", "flask", "Research"], ["projects", "folder", "Projects"], ["saved", "bookmark", "Shortlist"], ["ask", "chat", "Ask AI"], ["trending", "trend", "Trending"], ["finder", "compass", "Find products"]];
   const B = [["pricing", "card", "Plans"], ["setup", "refresh", "Data setup"]].concat(S.admin ? [["admin", "shield", t("admin")]] : []);
-  const a = x => `<a href="#/${x[0]}" class="${active === x[0] ? "on" : ""}">${icon(x[1], 18)}<span>${x[2]}</span></a>`;
+  const a = x => `<a href="/${x[0]}" class="${active === x[0] ? "on" : ""}">${icon(x[1], 18)}<span>${x[2]}</span></a>`;
   return `<aside class="sh-nav"><div class="sh-me"><span class="sh-av">${esc(((S.me && (S.me.name || S.me.email)) || "?")[0].toUpperCase())}</span><div><b>${esc(S.me ? (S.me.name || S.me.email.split("@")[0]) : "")}</b><small>${esc(S.me && S.plans ? S.plans.plans[S.me.plan].name + " plan" : "")}</small></div></div>
     <nav>${L.map(a).join("")}</nav><nav class="sh-b">${B.map(a).join("")}</nav>
-    ${S.me && S.me.plan === "free" && !S.admin ? `<div class="sh-up"><b>Upgrade to Pro</b><span>60 checks a day and every idea.</span><a class="btn sm g" href="#/pricing">See plans</a></div>` : ""}</aside>`;
+    ${S.me && S.me.plan === "free" && !S.admin ? `<div class="sh-up"><b>Upgrade to Pro</b><span>60 checks a day and every idea.</span><a class="btn sm g" href="/pricing">See plans</a></div>` : ""}</aside>`;
 }
 for (const k of ["dashboard", "admin"]){
   const base = VIEWS[k];
@@ -541,15 +541,15 @@ Object.assign(IP, {wallet: IP.wallet || '<rect x="3" y="6" width="18" height="13
 /* ================= ADMIN: separate login, first-admin setup, API keys page ================= */
 async function adminLoginView(r){
   let st = {has_admin: true}; try { st = await api("/api/admin/status") } catch(e){}
-  if (st.is_admin){ location.hash = "#/admin"; return }
+  if (st.is_admin){ go("/admin"); return }
   const setup = false;   // the admin account is seeded from ADMIN_EMAIL / ADMIN_PASSWORD on the API
   $("#app").innerHTML = `<section class="auth adm">
     <div class="auth-l adm-l">${doodles([["chart", "80%", "16%", 50, "c1", 0], ["box", "10%", "64%", 44, "c3", -8, 1], ["star", "84%", "60%", 24, "c2", 0, 2]])}<span class="glow-b"></span>
-      <a class="logo light" href="#/"><i><img src="/static/brand/icon-96.png" alt="" width="34" height="34"></i><span>Product <em>Radar</em></span></a>
+      <a class="logo light" href="/"><i><img src="/static/brand/icon-96.png" alt="" width="34" height="34"></i><span>Product <em>Radar</em></span></a>
       <div class="auth-copy"><span class="adm-tag">${icon("shield", 14)} Admin console</span><h1>Run the whole app <span>from one place.</span></h1>
         <p>Users and plans, API keys, live data, usage and AI cost. No code and no .env editing.</p>
         <ul class="adm-list">${["Add and test every API key in the browser", "Refresh live data with one click", "Change any user's plan or make them admin", "See checks, sign-ups, AI usage and top searches"].map(x => `<li>${icon("check", 14)}${x}</li>`).join("")}</ul></div></div>
-    <div class="auth-r"><a class="back" href="#/">${icon("arrow", 14)} Back to the site</a>
+    <div class="auth-r"><a class="back" href="/">${icon("arrow", 14)} Back to the site</a>
       <form class="auth-f" id="admf" novalidate>
         <span class="adm-ic">${icon("shield", 22)}</span>
         <h2>${setup ? "Create the admin account" : "Admin log in"}<span class="dot">.</span></h2>
@@ -559,13 +559,13 @@ async function adminLoginView(r){
         <label class="field">Password<span class="pw"><input name="password" type="password" required minlength="8" autocomplete="${setup ? "new-password" : "current-password"}" placeholder="${setup ? "At least 8 characters" : "Your password"}"><button type="button" id="pwt2">Show</button></span></label>
         <p class="err hide" id="ae2" role="alert"></p>
         <button class="btn g big" type="submit">${setup ? "Create admin account" : "Log in to the console"}</button>
-        <p class="mut sw">Not an admin? <a href="#/login?m=login">Normal log in</a></p></form></div></section>`;
+        <p class="mut sw">Not an admin? <a href="/login?m=login">Normal log in</a></p></form></div></section>`;
   $("#pwt2").onclick = () => { const i = $("#admf input[name=password]"), s = i.type === "password"; i.type = s ? "text" : "password"; $("#pwt2").textContent = s ? "Hide" : "Show" };
   $("#admf").onsubmit = async e => {
     e.preventDefault(); const f = Object.fromEntries(new FormData(e.target)), err = $("#ae2"), b = e.target.querySelector("button[type=submit]");
     if (!/^\S+@\S+\.\S+$/.test(f.email || "") || (f.password || "").length < 8){ err.textContent = "Type a real email and a password of at least 8 characters."; return err.classList.remove("hide") }
     b.disabled = true; b.textContent = "Please wait…";
-    try { await api(setup ? "/api/admin/setup" : "/api/admin/login", {method: "POST", body: JSON.stringify(f)}); await loadMe(); location.hash = setup ? "#/apikeys" : "#/admin"; toastBase(setup ? "Admin account created. Add your API keys next." : "Welcome back.") }
+    try { await api(setup ? "/api/admin/setup" : "/api/admin/login", {method: "POST", body: JSON.stringify(f)}); await loadMe(); go(setup ? "/apikeys" : "/admin"); toastBase(setup ? "Admin account created. Add your API keys next." : "Welcome back.") }
     catch(x){ err.textContent = x.message; err.classList.remove("hide"); b.disabled = false; b.textContent = setup ? "Create admin account" : "Log in to the console" }
   };
 }
@@ -574,7 +574,7 @@ VIEWS.adminlogin = adminLoginView;
 /* gate: admin pages send non-admins to the admin log in */
 for (const k of ["admin"]){
   const base = VIEWS[k];
-  VIEWS[k] = async r => { if (!S.admin){ location.hash = "#/adminlogin"; return } return base(r) };
+  VIEWS[k] = async r => { if (!S.admin){ go("/adminlogin"); return } return base(r) };
 }
 
 const KEYGROUPS = [
@@ -601,7 +601,7 @@ const KEYGROUPS = [
 ];
 const AI_PRESETS = [["Google Gemini", "https://generativelanguage.googleapis.com/v1beta/openai"], ["OpenAI", "https://api.openai.com/v1"], ["Groq", "https://api.groq.com/openai/v1"], ["OpenRouter", "https://openrouter.ai/api/v1"]];
 async function apiKeysView(){
-  if (!S.admin){ location.hash = "#/adminlogin"; return }
+  if (!S.admin){ go("/adminlogin"); return }
   $("#app").innerHTML = `<section class="sh">${shellNav("apikeys")}<div class="sh-main"><div class="wrap sh-wrap"><div class="card"><div class="skel"></div></div></div></div></section>`;
   let F; try { F = (await api("/api/admin/settings")).fields } catch(e){ $(".sh-wrap").innerHTML = `<div class="card empty">${esc(e.message)}</div>`; return }
   const by = k => F.find(f => f.key === k);
@@ -643,7 +643,7 @@ SECTION.apikeys = "admin"; SECTION.adminlogin = "admin";
 const shellNavBase = shellNav;
 shellNav = function(active){
   let h = shellNavBase(active);
-  if (S.admin) h = h.replace(/<a href="#\/admin"[^>]*>[\s\S]*?<\/a>/, `<a href="#/admin" class="${active === "admin" ? "on" : ""}">${icon("shield", 18)}<span>Admin overview</span></a><a href="#/apikeys" class="${active === "apikeys" ? "on" : ""}">${icon("key", 18)}<span>API keys</span></a>`);
+  if (S.admin) h = h.replace(/<a href="\/admin"[^>]*>[\s\S]*?<\/a>/, `<a href="/admin" class="${active === "admin" ? "on" : ""}">${icon("shield", 18)}<span>Admin overview</span></a><a href="/apikeys" class="${active === "apikeys" ? "on" : ""}">${icon("key", 18)}<span>API keys</span></a>`);
   return h;
 };
 Object.assign(IP, {key: '<circle cx="8" cy="15" r="4"/><path d="M11 12l9-9M17 6l3 3M14 9l2 2"/>', bulb: IP.bulb || '<path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-4 10.5c.8.8 1 1.5 1 2.5h6c0-1 .2-1.7 1-2.5A6 6 0 0 0 12 3z"/>'});
@@ -652,4 +652,4 @@ render = function(){ renderBase5(); const n = route().name; document.body.classL
 
 /* admin overview: one clear button to the API keys page */
 const adminBase2 = VIEWS.admin;
-VIEWS.admin = async r => { await adminBase2(r); const h = $(".sh-wrap > .row"); if (h && !$("#gokeys")) h.insertAdjacentHTML("beforeend", `<a class="btn g sm" id="gokeys" href="#/apikeys">${icon("key", 15)} Manage API keys</a>`) };
+VIEWS.admin = async r => { await adminBase2(r); const h = $(".sh-wrap > .row"); if (h && !$("#gokeys")) h.insertAdjacentHTML("beforeend", `<a class="btn g sm" id="gokeys" href="/apikeys">${icon("key", 15)} Manage API keys</a>`) };

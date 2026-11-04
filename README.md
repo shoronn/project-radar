@@ -51,11 +51,20 @@ Both containers sit behind Coolify's reverse proxy (Traefik), which terminates T
 4. The API answers only allowed origins (`CORS_ORIGINS`) and sets a host-only session cookie on `api-pradar.maktechgroup.com`.
 5. Both hosts share the registrable domain `maktechgroup.com`, so they are the **same site**. `SameSite=Lax` cookies are therefore sent on these requests, and browsers don't treat them as third-party cookies.
 
+### Routing (clean URLs)
+
+The SPA uses the History API: `/research?q=moon%20lamp`, `/dashboard`, `/admin`. No `#/` URLs.
+
+- **Client:** the `ROUTES` list in `apps/web/public/static/app.js`. Same-origin `<a href="/…">` clicks are handled without a page reload, and Back/Forward work. Each route sets its own page title. Unknown paths show a "page not found" screen.
+- **Server:** the matching route list in `apps/web/nginx/default.conf.template`. Known routes get `index.html` with **200**. Any other path gets the same page with **HTTP 404**, so `/wp-login.php` or `/foo` is a real 404 for crawlers and monitoring. A missing file under `/static/` is a plain 404.
+- **Old links** like `/#/pricing` are rewritten to `/pricing` on load.
+- **Adding a page:** register `VIEWS.<name>` in the JS, then add `<name>` to **both** route lists.
+
 ### Authentication (users and admins)
 
 | | User dashboard | Admin console |
 |---|---|---|
-| URL | `https://projectradar.maktechgroup.com/#/login` → `#/dashboard` | `https://projectradar.maktechgroup.com/#/adminlogin` → `#/admin`, `#/apikeys` |
+| URL | `https://projectradar.maktechgroup.com/login` → `/dashboard` | `https://projectradar.maktechgroup.com/adminlogin` → `/admin`, `/apikeys` |
 | Method | Email + password (sign up or log in) | Email + password, admin accounts only |
 | First account | Self sign-up | **Seeded automatically** from `ADMIN_EMAIL` / `ADMIN_PASSWORD` |
 | Session | Signed HttpOnly cookie `pr_session`, 30 days (`SESSION_DAYS`) | Same cookie, plus an admin check on every `/api/admin/*` call |
@@ -112,6 +121,7 @@ product-radar/
 │       ├── .env.example
 │       └── public/
 │           ├── index.html
+│           ├── robots.txt                # keeps /admin, /dashboard … out of search engines
 │           └── static/  boot.js app.js screens.js extra.js ui.js style.css brand/
 ├── docker-compose.yml                # local test of both containers together
 ├── .env.example                      # used only by docker-compose
@@ -291,7 +301,7 @@ If these two don't match, the browser blocks every API call (CORS) or the API re
 
 ### 4.3 After the first deploy
 
-1. Open `https://projectradar.maktechgroup.com/#/adminlogin` and log in with `ADMIN_EMAIL` / `ADMIN_PASSWORD`.
+1. Open `https://projectradar.maktechgroup.com/adminlogin` and log in with `ADMIN_EMAIL` / `ADMIN_PASSWORD`.
 2. **API keys** in the side menu: add SerpApi, AliExpress, AI and so on, then press **Test** for each.
 3. Optional: in Coolify enable **Auto Deploy** on push for both apps. Use **Watch Paths** `apps/api/**` and `apps/web/**` so a frontend-only change doesn't redeploy the API.
 
@@ -343,7 +353,7 @@ The image ships `content/ideas.json`, `content/plans.json` and `content/benchmar
 ```sh
 cp .env.example .env          # local admin creds, AUTO_REFRESH=0
 docker compose up --build
-# Web  http://localhost:3000      Admin  http://localhost:3000/#/adminlogin
+# Web  http://localhost:3000      Admin  http://localhost:3000/adminlogin
 # API  http://localhost:8000/healthz
 ```
 
@@ -375,8 +385,8 @@ python3 -m http.server 3000                      # http://localhost:3000
 - **Discover:** Product Finder (channel, budget, category, buyer, risk), Trending, Ideas, Season calendar.
 - **Research:** a 7-step workspace (Overview, Demand, Timing, Competitors, Customer voice, Sourcing & cost, Decision) with an Ask AI panel.
 - **Projects and Report:** saved research and a printable 8-part report.
-- **User dashboard** (`#/dashboard`): checks left today, AI answers left, projects, shortlist, recent checks, rising products, season chart.
-- **Admin console** (`#/admin`, `#/apikeys`): users and plans, sign-ups and checks per day, AI usage and cost, revenue estimate, top searches, data freshness with Refresh/Photos buttons, job log, and API keys with Test buttons.
+- **User dashboard** (`/dashboard`): checks left today, AI answers left, projects, shortlist, recent checks, rising products, season chart.
+- **Admin console** (`/admin`, `/apikeys`): users and plans, sign-ups and checks per day, AI usage and cost, revenue estimate, top searches, data freshness with Refresh/Photos buttons, job log, and API keys with Test buttons.
 
 ### Evidence and scoring
 
@@ -411,6 +421,7 @@ Limits are in `plans.json` (guest 2 checks/day, free 5, pro 60, business 300; AI
 | Browser console: *blocked by CORS policy* | `CORS_ORIGINS` on the API must be exactly `https://projectradar.maktechgroup.com` (scheme, no trailing slash). |
 | API returns `403 {"error":"origin"}` | Same as above: the request came from an origin not in `CORS_ORIGINS`. |
 | Log in works but you're logged out on the next page | `COOKIE_SECURE=1` while the site is served over plain `http`, or the web and API are on different registrable domains. |
+| A new page shows "page not found" or returns 404 | Add its name to `ROUTES` in `app.js` **and** to the route regex in `nginx/default.conf.template`. |
 | Console: *Refused to connect … Content Security Policy* | `API_URL` on the web app is wrong or missing. Fix it and restart the web app. |
 | API container exits at start with `ADMIN_PASSWORD must be at least 12 characters` | Set a longer `ADMIN_PASSWORD`. |
 | Admin password forgotten | Change `ADMIN_PASSWORD` in Coolify and restart the API (with `ADMIN_SYNC_PASSWORD=1`). |
